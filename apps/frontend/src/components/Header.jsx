@@ -33,6 +33,11 @@ const styles = {
     color: '#e6edf3',
     letterSpacing: '-0.3px',
   },
+  controls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+  },
   button: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -49,9 +54,25 @@ const styles = {
     fontFamily: 'inherit',
     lineHeight: '20px',
   },
+  viewToggle: {
+    display: 'inline-flex',
+    borderRadius: 6,
+    overflow: 'hidden',
+    border: '1px solid #30363d',
+  },
+  viewBtn: {
+    padding: '6px 14px',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    border: 'none',
+    fontFamily: 'inherit',
+    transition: 'all 0.15s ease',
+    lineHeight: '20px',
+  },
 };
 
-export default function Header({ onNewAgent }) {
+export default function Header({ onNewAgent, view, onViewChange }) {
   const [hover, setHover] = React.useState(false);
 
   return (
@@ -60,17 +81,41 @@ export default function Header({ onNewAgent }) {
         <div style={styles.logo}>A</div>
         <span style={styles.title}>Agent Deck</span>
       </div>
-      <button
-        style={{
-          ...styles.button,
-          background: hover ? '#2ea043' : '#238636',
-        }}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-        onClick={onNewAgent}
-      >
-        + New Agent
-      </button>
+      <div style={styles.controls}>
+        <div style={styles.viewToggle}>
+          <button
+            style={{
+              ...styles.viewBtn,
+              background: view === 'terminal' ? '#238636' : '#21262d',
+              color: view === 'terminal' ? '#fff' : '#8b949e',
+            }}
+            onClick={() => onViewChange?.('terminal')}
+          >
+            Terminal View
+          </button>
+          <button
+            style={{
+              ...styles.viewBtn,
+              background: view === 'office' ? '#238636' : '#21262d',
+              color: view === 'office' ? '#fff' : '#8b949e',
+            }}
+            onClick={() => onViewChange?.('office')}
+          >
+            Office View
+          </button>
+        </div>
+        <button
+          style={{
+            ...styles.button,
+            background: hover ? '#2ea043' : '#238636',
+          }}
+          onMouseEnter={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
+          onClick={onNewAgent}
+        >
+          + New Agent
+        </button>
+      </div>
     </header>
   );
 }

@@ -81,8 +81,16 @@ export default function setupWebSocket(server, sessionManager) {
       }
     };
 
+    const onActivity = ({ sessionId: sid, activity }) => {
+      if (sid !== sessionId) return;
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({ type: WS_MSG.ACTIVITY, activity }));
+      }
+    };
+
     sessionManager.on('data', onData);
     sessionManager.on('exit', onExit);
+    sessionManager.on('activity', onActivity);
 
     // ---- handle incoming client messages ------------------------------
     ws.on('message', (raw) => {
@@ -115,10 +123,16 @@ export default function setupWebSocket(server, sessionManager) {
       }
     });
 
+    // ---- send current activity state on connect -----------------------
+    if (session.activity) {
+      ws.send(JSON.stringify({ type: WS_MSG.ACTIVITY, activity: session.activity }));
+    }
+
     // ---- clean up on disconnect ---------------------------------------
     ws.on('close', () => {
       sessionManager.off('data', onData);
       sessionManager.off('exit', onExit);
+      sessionManager.off('activity', onActivity);
       const clients = sessionClients.get(sessionId);
       if (clients) {
         clients.delete(ws);

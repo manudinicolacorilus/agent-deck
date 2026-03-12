@@ -9,12 +9,24 @@ export const WS_MSG = {
   SESSION_EXIT: 'session:exit',
   SESSION_CLOSED: 'session_closed',
   ERROR: 'error',
+  ACTIVITY: 'activity',
 };
 
 // Session states
 export const SESSION_STATE = {
   RUNNING: 'running',
   STOPPED: 'stopped',
+  ERROR: 'error',
+};
+
+// Agent activity states (detected from terminal output)
+export const ACTIVITY_STATE = {
+  IDLE: 'idle',
+  THINKING: 'thinking',
+  READING: 'reading',
+  EDITING: 'editing',
+  RUNNING_COMMAND: 'running_command',
+  DONE: 'done',
   ERROR: 'error',
 };
 
