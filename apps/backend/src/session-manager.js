@@ -1,4 +1,7 @@
 import { EventEmitter } from 'node:events';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import pty from 'node-pty';
 import { v4 as uuidv4 } from 'uuid';
 import config from './config.js';
@@ -34,23 +37,41 @@ export default class SessionManager extends EventEmitter {
 
     const id = uuidv4();
     const template = cmdTemplate || config.COPILOT_CMD_TEMPLATE;
+    const resolvedWorkDir = workDir || process.cwd();
 
-    // Escape prompt for safe PowerShell interpolation:
-    // Replace single quotes with two single quotes (PS escape) so the
-    // prompt can contain markdown, special chars, etc. without being
-    // parsed as PowerShell code.
-    const safePrompt = (prompt || '').replace(/'/g, "''");
-    const safeWorkDir = (workDir || process.cwd()).replace(/'/g, "''");
+    // Write prompt to a temp file so it never hits the command line.
+    // This avoids PowerShell parsing markdown/special chars as code
+    // and sidesteps Windows command-line length limits.
+    let promptFile = null;
+    if (prompt) {
+      const tmpDir = path.join(os.tmpdir(), 'agent-deck');
+      fs.mkdirSync(tmpDir, { recursive: true });
+      promptFile = path.join(tmpDir, `${id}.prompt.txt`);
+      fs.writeFileSync(promptFile, prompt, 'utf8');
+    }
 
-    const cmd = template
-      .replace(/\{workDir\}/g, safeWorkDir)
-      .replace(/\{prompt\}/g, safePrompt);
+    // Build the command: replace {prompt} with the file content read inline,
+    // and {promptFile} with the path for agents that support file input.
+    const safeWorkDir = resolvedWorkDir.replace(/'/g, "''");
+    let cmd = template.replace(/\{workDir\}/g, safeWorkDir);
+
+    if (promptFile) {
+      // Replace {prompt} with an inline PS expression that reads the file
+      const safePath = promptFile.replace(/'/g, "''");
+      cmd = cmd
+        .replace(/\{prompt\}/g, `$(Get-Content -Raw '${safePath}')`)
+        .replace(/\{promptFile\}/g, safePath);
+    } else {
+      cmd = cmd
+        .replace(/\{prompt\}/g, '')
+        .replace(/\{promptFile\}/g, '');
+    }
 
     const ptyProcess = pty.spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-Command', cmd], {
       name: 'xterm-256color',
       cols: 120,
       rows: 30,
-      cwd: workDir || process.cwd(),
+      cwd: resolvedWorkDir,
       env: process.env,
     });
 
@@ -58,8 +79,9 @@ export default class SessionManager extends EventEmitter {
       id,
       pid: ptyProcess.pid,
       label: label || `Session ${id.slice(0, 8)}`,
-      workDir: workDir || process.cwd(),
+      workDir: resolvedWorkDir,
       prompt: prompt || '',
+      promptFile,
       state: SESSION_STATE.RUNNING,
       createdAt: new Date().toISOString(),
       pty: ptyProcess,
@@ -77,6 +99,10 @@ export default class SessionManager extends EventEmitter {
       session.state = SESSION_STATE.STOPPED;
       session.exitCode = exitCode;
       session.signal = signal;
+      // Clean up temp prompt file
+      if (session.promptFile) {
+        try { fs.unlinkSync(session.promptFile); } catch { /* ignore */ }
+      }
       this.emit('exit', { sessionId: id, exitCode, signal });
     });
 
@@ -160,7 +186,7 @@ export default class SessionManager extends EventEmitter {
    * Return a plain object safe for JSON serialisation (strips the pty handle).
    */
   static serialise(session) {
-    const { pty, ringBuffer, ringBufferBytes, ...rest } = session;
+    const { pty, ringBuffer, ringBufferBytes, promptFile, ...rest } = session;
     return rest;
   }
 }
