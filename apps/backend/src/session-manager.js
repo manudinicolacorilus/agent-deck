@@ -38,7 +38,7 @@ export default class SessionManager extends EventEmitter {
       .replace(/\{workDir\}/g, workDir || process.cwd())
       .replace(/\{prompt\}/g, prompt || '');
 
-    const ptyProcess = pty.spawn('powershell.exe', ['-Command', cmd], {
+    const ptyProcess = pty.spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-Command', cmd], {
       name: 'xterm-256color',
       cols: 120,
       rows: 30,

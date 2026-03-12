@@ -4,7 +4,8 @@ const CMD_PRESETS = [
   { label: 'Mock Agent (default)', value: '' },
   { label: 'GitHub Copilot (interactive)', value: "cd '{workDir}'; copilot -i '{prompt}' --allow-all" },
   { label: 'GitHub Copilot (non-interactive)', value: "cd '{workDir}'; copilot -p '{prompt}' --allow-all-tools" },
-  { label: 'Claude Code', value: "cd '{workDir}'; claude -i '{prompt}'" },
+  { label: 'Claude Code (interactive)', value: "cd '{workDir}'; claude '{prompt}'" },
+  { label: 'Claude Code (non-interactive)', value: "cd '{workDir}'; claude -p '{prompt}' --allowedTools '*'" },
   { label: 'Custom...', value: '__custom__' },
 ];
 

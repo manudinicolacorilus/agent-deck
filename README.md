@@ -102,11 +102,11 @@ npm run dev:backend
 ### Claude Code
 
 ```powershell
-# Interactive mode
-$env:COPILOT_CMD_TEMPLATE = "cd '{workDir}'; claude -i '{prompt}'"
+# Interactive mode (starts claude with initial prompt)
+$env:COPILOT_CMD_TEMPLATE = "cd '{workDir}'; claude '{prompt}'"
 npm run dev:backend
 
-# Print mode
+# Non-interactive print mode
 $env:COPILOT_CMD_TEMPLATE = "cd '{workDir}'; claude -p '{prompt}' --allowedTools '*'"
 npm run dev:backend
 ```
