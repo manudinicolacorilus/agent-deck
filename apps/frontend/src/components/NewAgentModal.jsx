@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const CMD_PRESETS = [
   { label: 'Mock Agent (default)', value: '' },
-  { label: 'GitHub Copilot (interactive)', value: "cd /d \"{workDir}\" && copilot -i \"{prompt}\" --allow-all" },
-  { label: 'GitHub Copilot (non-interactive)', value: "cd /d \"{workDir}\" && copilot -p \"{prompt}\" --allow-all-tools" },
-  { label: 'Claude Code (interactive)', value: "cd /d \"{workDir}\" && claude \"{prompt}\"" },
-  { label: 'Claude Code (non-interactive)', value: "cd /d \"{workDir}\" && claude -p \"{prompt}\" --allowedTools \"*\"" },
+  { label: 'GitHub Copilot (interactive)', value: "cd '{workDir}'; copilot -i '{prompt}' --allow-all" },
+  { label: 'GitHub Copilot (non-interactive)', value: "cd '{workDir}'; copilot -p '{prompt}' --allow-all-tools" },
+  { label: 'Claude Code (interactive)', value: "cd '{workDir}'; claude '{prompt}'" },
+  { label: 'Claude Code (non-interactive)', value: "cd '{workDir}'; claude -p '{prompt}' --allowedTools '*'" },
   { label: 'Custom...', value: '__custom__' },
 ];
 

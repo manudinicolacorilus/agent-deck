@@ -37,13 +37,14 @@ export default class SessionManager extends EventEmitter {
 
     const id = uuidv4();
     const template = cmdTemplate || config.COPILOT_CMD_TEMPLATE;
-    const resolvedWorkDir = workDir || process.cwd();
+    // Always resolve to an absolute path
+    const resolvedWorkDir = path.resolve(workDir || process.cwd());
     const tmpDir = path.join(os.tmpdir(), 'agent-deck');
     fs.mkdirSync(tmpDir, { recursive: true });
 
-    // Write prompt to a .md file. The agent CLI reads the file instead of
-    // receiving the prompt as a command-line argument. This completely
-    // avoids shell parsing issues with special characters, markdown, etc.
+    // Write prompt to a .md file. The agent CLI reads the file path instead
+    // of receiving the raw prompt text as a CLI argument. This avoids all
+    // shell parsing issues with markdown, special chars, long text, etc.
     let promptFile = null;
     if (prompt) {
       promptFile = path.join(tmpDir, `${id}.prompt.md`);
@@ -55,15 +56,14 @@ export default class SessionManager extends EventEmitter {
       .replace(/\{workDir\}/g, resolvedWorkDir)
       .replace(/\{promptFile\}/g, promptFile || '')
       .replace(/\{prompt\}/g, promptFile
-        ? `Read the instructions from this file and execute them: ${promptFile}`
+        ? `Read and execute the instructions in ${promptFile}`
         : '');
 
-    // Spawn via cmd.exe to avoid PowerShell parsing issues entirely.
-    // For the mock agent, we still need PowerShell so we invoke it explicitly
-    // in the command template.
+    // Spawn PowerShell with -Command. The prompt text never appears in the
+    // command — only a short file path reference does.
     const ptyProcess = pty.spawn(
-      'cmd.exe',
-      ['/C', cmd],
+      'powershell.exe',
+      ['-ExecutionPolicy', 'Bypass', '-Command', cmd],
       {
         name: 'xterm-256color',
         cols: 120,
