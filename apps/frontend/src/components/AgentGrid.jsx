@@ -51,9 +51,7 @@ export default function AgentGrid({ sessions, onKill }) {
     <div style={styles.grid}>
       {sessions.map((session) => (
         <AgentPanel key={session.id} session={session} onKill={onKill}>
-          {session.state === 'running' && (
-            <TerminalView sessionId={session.id} />
-          )}
+          <TerminalView sessionId={session.id} />
         </AgentPanel>
       ))}
     </div>

@@ -20,6 +20,7 @@ export default function TerminalView({ sessionId, style }) {
     if (!el || !sessionId) return;
 
     let disposed = false;
+    let sessionExited = false;
     let ws = null;
     let reconnectTimer = null;
     let reconnectAttempts = 0;
@@ -89,6 +90,7 @@ export default function TerminalView({ sessionId, style }) {
               terminal.write(msg.data);
               break;
             case 'session:exit':
+              sessionExited = true;
               terminal.write(
                 `\r\n\x1b[33m[Session exited${msg.exitCode != null ? ` with code ${msg.exitCode}` : ''}]\x1b[0m\r\n`
               );
@@ -103,7 +105,7 @@ export default function TerminalView({ sessionId, style }) {
       };
 
       ws.onclose = () => {
-        if (disposed) return;
+        if (disposed || sessionExited) return;
         if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
           terminal.write('\r\n\x1b[31m[Connection lost. Max reconnect attempts reached.]\x1b[0m\r\n');
           return;
