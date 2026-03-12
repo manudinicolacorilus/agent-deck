@@ -85,36 +85,43 @@ npm test
 
 Agent Deck is command-agnostic. Configure which CLI agent to spawn via the `COPILOT_CMD_TEMPLATE` environment variable, or select a preset per-session in the UI.
 
-Use `{workDir}` and `{prompt}` as placeholders — they are replaced with values from the session creation form.
+Available placeholders:
+- `{workDir}` — working directory from the session form
+- `{prompt}` — for short prompts: inline text; for long prompts: instruction to read the prompt file
+- `{promptFile}` — absolute path to a `.md` file containing the full prompt text
+
+Long prompts (with markdown, code blocks, etc.) are automatically written to a temp file. The `{prompt}` placeholder becomes a short instruction like `"Read the instructions from this file and execute them: C:\...\prompt.md"`, which is safe to pass as a CLI argument.
+
+Commands are spawned via `cmd.exe /C`, not PowerShell, to avoid shell parsing issues.
 
 ### GitHub Copilot CLI
 
 ```powershell
 # Interactive mode
-$env:COPILOT_CMD_TEMPLATE = "cd '{workDir}'; copilot -i '{prompt}' --allow-all"
+$env:COPILOT_CMD_TEMPLATE = 'cd /d "{workDir}" && copilot -i "{prompt}" --allow-all'
 npm run dev:backend
 
 # Non-interactive mode
-$env:COPILOT_CMD_TEMPLATE = "cd '{workDir}'; copilot -p '{prompt}' --allow-all-tools"
+$env:COPILOT_CMD_TEMPLATE = 'cd /d "{workDir}" && copilot -p "{prompt}" --allow-all-tools'
 npm run dev:backend
 ```
 
 ### Claude Code
 
 ```powershell
-# Interactive mode (starts claude with initial prompt)
-$env:COPILOT_CMD_TEMPLATE = "cd '{workDir}'; claude '{prompt}'"
+# Interactive mode
+$env:COPILOT_CMD_TEMPLATE = 'cd /d "{workDir}" && claude "{prompt}"'
 npm run dev:backend
 
 # Non-interactive print mode
-$env:COPILOT_CMD_TEMPLATE = "cd '{workDir}'; claude -p '{prompt}' --allowedTools '*'"
+$env:COPILOT_CMD_TEMPLATE = 'cd /d "{workDir}" && claude -p "{prompt}" --allowedTools "*"'
 npm run dev:backend
 ```
 
 ### Aider
 
 ```powershell
-$env:COPILOT_CMD_TEMPLATE = "cd '{workDir}'; aider --message '{prompt}'"
+$env:COPILOT_CMD_TEMPLATE = 'cd /d "{workDir}" && aider --message "{prompt}"'
 npm run dev:backend
 ```
 

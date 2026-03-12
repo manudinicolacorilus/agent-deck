@@ -41,43 +41,29 @@ export default class SessionManager extends EventEmitter {
     const tmpDir = path.join(os.tmpdir(), 'agent-deck');
     fs.mkdirSync(tmpDir, { recursive: true });
 
-    // Generate a temporary .ps1 wrapper script that:
-    // 1. Assigns the prompt to a variable via a here-string (@'...'@)
-    //    which is 100% literal — no escaping needed for any characters
-    // 2. Runs the actual command template with the variable
-    //
-    // This completely avoids prompt text hitting the command line where
-    // PowerShell would parse markdown chars (*, -, backticks) as operators.
-    const safeWorkDir = resolvedWorkDir.replace(/'/g, "''");
-    const cmdWithPlaceholders = template.replace(/\{workDir\}/g, safeWorkDir);
-
-    let scriptContent;
+    // Write prompt to a .md file. The agent CLI reads the file instead of
+    // receiving the prompt as a command-line argument. This completely
+    // avoids shell parsing issues with special characters, markdown, etc.
+    let promptFile = null;
     if (prompt) {
-      // Here-string: everything between @'\n and \n'@ is literal
-      // The only rule: '@ must be at the start of a line
-      scriptContent = [
-        `$__agentPrompt = @'`,
-        prompt,
-        `'@`,
-        // Double-quote the variable so PowerShell passes it as a single
-        // argument to native executables (without quotes, PS splits
-        // multi-line strings into separate args at newline boundaries).
-        cmdWithPlaceholders
-          .replace(/\{prompt\}/g, '"$__agentPrompt"')
-          .replace(/\{promptFile\}/g, ''),
-      ].join('\n');
-    } else {
-      scriptContent = cmdWithPlaceholders
-        .replace(/\{prompt\}/g, '')
-        .replace(/\{promptFile\}/g, '');
+      promptFile = path.join(tmpDir, `${id}.prompt.md`);
+      fs.writeFileSync(promptFile, prompt, 'utf8');
     }
 
-    const wrapperScript = path.join(tmpDir, `${id}.wrapper.ps1`);
-    fs.writeFileSync(wrapperScript, scriptContent, 'utf8');
+    // Replace placeholders in the template
+    const cmd = template
+      .replace(/\{workDir\}/g, resolvedWorkDir)
+      .replace(/\{promptFile\}/g, promptFile || '')
+      .replace(/\{prompt\}/g, promptFile
+        ? `Read the instructions from this file and execute them: ${promptFile}`
+        : '');
 
+    // Spawn via cmd.exe to avoid PowerShell parsing issues entirely.
+    // For the mock agent, we still need PowerShell so we invoke it explicitly
+    // in the command template.
     const ptyProcess = pty.spawn(
-      'powershell.exe',
-      ['-ExecutionPolicy', 'Bypass', '-File', wrapperScript],
+      'cmd.exe',
+      ['/C', cmd],
       {
         name: 'xterm-256color',
         cols: 120,
@@ -93,7 +79,7 @@ export default class SessionManager extends EventEmitter {
       label: label || `Session ${id.slice(0, 8)}`,
       workDir: resolvedWorkDir,
       prompt: prompt || '',
-      wrapperScript,
+      promptFile,
       state: SESSION_STATE.RUNNING,
       createdAt: new Date().toISOString(),
       pty: ptyProcess,
@@ -111,9 +97,9 @@ export default class SessionManager extends EventEmitter {
       session.state = SESSION_STATE.STOPPED;
       session.exitCode = exitCode;
       session.signal = signal;
-      // Clean up temp wrapper script
-      if (session.wrapperScript) {
-        try { fs.unlinkSync(session.wrapperScript); } catch { /* ignore */ }
+      // Clean up temp prompt file
+      if (session.promptFile) {
+        try { fs.unlinkSync(session.promptFile); } catch { /* ignore */ }
       }
       this.emit('exit', { sessionId: id, exitCode, signal });
     });
@@ -198,7 +184,7 @@ export default class SessionManager extends EventEmitter {
    * Return a plain object safe for JSON serialisation (strips the pty handle).
    */
   static serialise(session) {
-    const { pty, ringBuffer, ringBufferBytes, wrapperScript, ...rest } = session;
+    const { pty, ringBuffer, ringBufferBytes, promptFile, ...rest } = session;
     return rest;
   }
 }
