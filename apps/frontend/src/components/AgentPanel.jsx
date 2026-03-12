@@ -1,5 +1,5 @@
 import React from 'react';
-import StatusBadge from './StatusBadge';
+import StatusBadge, { EngineBadge, YoloBadge } from './StatusBadge';
 import ConfirmKillModal from './ConfirmKillModal';
 import useElapsedTime from '../hooks/useElapsedTime';
 
@@ -150,6 +150,8 @@ export default function AgentPanel({ session, onKill, onClose, children }) {
         <div style={styles.headerLeft}>
           <span style={styles.label}>{session.label || session.id}</span>
           <StatusBadge state={session.state} />
+          {session.engine && <EngineBadge engine={session.engine} />}
+          {session.yolo && <YoloBadge />}
         </div>
         <div style={styles.headerRight}>
           <button

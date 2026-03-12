@@ -23,8 +23,6 @@ let dataHandler;
 let exitHandler;
 
 function capturePtyHandlers(ptyInstance) {
-  // node-pty's onData / onExit are registered by SessionManager right after spawn.
-  // Our mock records them so tests can invoke them.
   ptyInstance.onData.mockImplementation((cb) => {
     dataHandler = cb;
   });
@@ -72,12 +70,15 @@ describe('SessionManager', () => {
       workDir: '/tmp',
       prompt: 'hello',
       label: 'Test Session',
+      engine: 'copilot',
     });
 
     expect(session).toHaveProperty('id');
     expect(session).toHaveProperty('pid');
     expect(session).toHaveProperty('label', 'Test Session');
     expect(session).toHaveProperty('state', 'running');
+    expect(session).toHaveProperty('engine', 'copilot');
+    expect(session).toHaveProperty('yolo', false);
     expect(session).not.toHaveProperty('pty');
     expect(session).not.toHaveProperty('ringBuffer');
     expect(pty.spawn).toHaveBeenCalledTimes(1);
@@ -88,10 +89,10 @@ describe('SessionManager', () => {
     const original = config.MAX_SESSIONS;
     config.MAX_SESSIONS = 2;
 
-    manager.createSession({ workDir: '/tmp', prompt: 'a' });
-    manager.createSession({ workDir: '/tmp', prompt: 'b' });
+    manager.createSession({ workDir: '/tmp', prompt: 'a', engine: 'copilot' });
+    manager.createSession({ workDir: '/tmp', prompt: 'b', engine: 'copilot' });
 
-    expect(() => manager.createSession({ workDir: '/tmp', prompt: 'c' })).toThrow(
+    expect(() => manager.createSession({ workDir: '/tmp', prompt: 'c', engine: 'copilot' })).toThrow(
       /Session limit reached/,
     );
 
@@ -100,7 +101,7 @@ describe('SessionManager', () => {
 
   // ------------------------------------------------------------------
   it('kills a session and marks it as stopped', () => {
-    const session = manager.createSession({ workDir: '/tmp', prompt: 'x' });
+    const session = manager.createSession({ workDir: '/tmp', prompt: 'x', engine: 'copilot' });
     const internal = manager.getSession(session.id);
 
     const killed = manager.killSession(session.id);
@@ -116,7 +117,7 @@ describe('SessionManager', () => {
 
   // ------------------------------------------------------------------
   it('accumulates output in the ring buffer', () => {
-    manager.createSession({ workDir: '/tmp', prompt: 'buf' });
+    manager.createSession({ workDir: '/tmp', prompt: 'buf', engine: 'copilot' });
 
     // Simulate PTY emitting data
     dataHandler('chunk-1');
@@ -132,7 +133,7 @@ describe('SessionManager', () => {
     const originalSize = config.RING_BUFFER_SIZE;
     config.RING_BUFFER_SIZE = 20; // 20 bytes
 
-    manager.createSession({ workDir: '/tmp', prompt: 'trim' });
+    manager.createSession({ workDir: '/tmp', prompt: 'trim', engine: 'copilot' });
 
     // Push data that exceeds 20 bytes total
     dataHandler('aaaaaaaaaa'); // 10 bytes → total 10
@@ -154,7 +155,7 @@ describe('SessionManager', () => {
     const onExit = vi.fn();
     manager.on('exit', onExit);
 
-    const session = manager.createSession({ workDir: '/tmp', prompt: 'exit-test' });
+    const session = manager.createSession({ workDir: '/tmp', prompt: 'exit-test', engine: 'copilot' });
 
     // Simulate PTY exit
     exitHandler({ exitCode: 0, signal: undefined });

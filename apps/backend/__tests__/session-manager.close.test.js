@@ -37,7 +37,7 @@ describe('SessionManager — remove() and getStatus()', () => {
 
   // ------------------------------------------------------------------
   it('remove() on a non-running session removes it and returns wasRunning: false', () => {
-    const session = manager.createSession({ workDir: '/tmp', prompt: 'done' });
+    const session = manager.createSession({ workDir: '/tmp', prompt: 'done', engine: 'copilot' });
 
     // Simulate exit so state becomes "stopped"
     exitHandler({ exitCode: 0, signal: undefined });
@@ -49,7 +49,7 @@ describe('SessionManager — remove() and getStatus()', () => {
 
   // ------------------------------------------------------------------
   it('remove() on a running session kills PTY, removes it, and returns wasRunning: true', () => {
-    const session = manager.createSession({ workDir: '/tmp', prompt: 'active' });
+    const session = manager.createSession({ workDir: '/tmp', prompt: 'active', engine: 'copilot' });
     const internal = manager.getSession(session.id);
 
     const result = manager.remove(session.id);
@@ -66,13 +66,13 @@ describe('SessionManager — remove() and getStatus()', () => {
 
   // ------------------------------------------------------------------
   it('getStatus() returns correct status for a running session', () => {
-    const session = manager.createSession({ workDir: '/tmp', prompt: 'status' });
+    const session = manager.createSession({ workDir: '/tmp', prompt: 'status', engine: 'copilot' });
     expect(manager.getStatus(session.id)).toBe('running');
   });
 
   // ------------------------------------------------------------------
   it('getStatus() returns "stopped" after kill', () => {
-    const session = manager.createSession({ workDir: '/tmp', prompt: 'kill-me' });
+    const session = manager.createSession({ workDir: '/tmp', prompt: 'kill-me', engine: 'copilot' });
     manager.killSession(session.id);
     expect(manager.getStatus(session.id)).toBe('stopped');
   });
@@ -87,7 +87,7 @@ describe('SessionManager — remove() and getStatus()', () => {
     const onRemoved = vi.fn();
     manager.on('session_removed', onRemoved);
 
-    const session = manager.createSession({ workDir: '/tmp', prompt: 'event' });
+    const session = manager.createSession({ workDir: '/tmp', prompt: 'event', engine: 'copilot' });
     manager.remove(session.id);
 
     expect(onRemoved).toHaveBeenCalledWith(
