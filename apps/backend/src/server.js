@@ -52,9 +52,19 @@ function buildApp(sessionManager) {
 
   // --- Kill session ----------------------------------------------------
   app.delete('/api/sessions/:id/kill', (req, res) => {
-    const killed = sessionManager.killSession(req.params.id);
-    if (killed) {
+    const result = sessionManager.remove(req.params.id);
+    if (result.removed) {
       res.json({ status: 'killed', id: req.params.id });
+    } else {
+      res.status(404).json({ error: 'Session not found' });
+    }
+  });
+
+  // --- Close session (kill if running + full removal) -----------------
+  app.delete('/api/sessions/:id/close', (req, res) => {
+    const result = sessionManager.remove(req.params.id);
+    if (result.removed) {
+      res.json({ removed: true, wasRunning: result.wasRunning });
     } else {
       res.status(404).json({ error: 'Session not found' });
     }

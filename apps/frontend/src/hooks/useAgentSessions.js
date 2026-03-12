@@ -66,5 +66,16 @@ export default function useAgentSessions() {
     }
   }, [refresh]);
 
-  return { sessions, loading, error, createSession, killSession, refresh };
+  const closeSession = useCallback(async (id) => {
+    try {
+      await api.closeSession(id);
+      // Optimistic removal from local state
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+    } catch (err) {
+      setError(err.message);
+      await refresh();
+    }
+  }, [refresh]);
+
+  return { sessions, loading, error, createSession, killSession, closeSession, refresh };
 }

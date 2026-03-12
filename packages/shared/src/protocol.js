@@ -7,6 +7,7 @@ export const WS_MSG = {
   // Server → Client
   OUTPUT: 'output',
   SESSION_EXIT: 'session:exit',
+  SESSION_CLOSED: 'session_closed',
   ERROR: 'error',
 };
 
@@ -23,6 +24,7 @@ export const API = {
   SESSIONS: '/api/sessions',
   SESSION: (id) => `/api/sessions/${id}`,
   SESSION_KILL: (id) => `/api/sessions/${id}/kill`,
+  SESSION_CLOSE: (id) => `/api/sessions/${id}/close`,
 };
 
 // Defaults

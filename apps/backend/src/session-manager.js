@@ -144,6 +144,46 @@ export default class SessionManager extends EventEmitter {
   }
 
   /**
+   * Convenience method — returns just the status string, or null if not found.
+   * @param {string} id
+   * @returns {string|null}
+   */
+  getStatus(id) {
+    const session = this.#sessions.get(id);
+    return session ? session.state : null;
+  }
+
+  /**
+   * Fully remove a session: kill if running, remove from map, clean up.
+   * @param {string} id
+   * @returns {{ removed: boolean, wasRunning?: boolean }}
+   */
+  remove(id) {
+    const session = this.#sessions.get(id);
+    if (!session) return { removed: false };
+
+    const wasRunning = session.state === SESSION_STATE.RUNNING;
+
+    if (wasRunning) {
+      try {
+        session.pty.kill();
+      } catch {
+        // Already exited — ignore.
+      }
+      session.state = SESSION_STATE.STOPPED;
+    }
+
+    // Clean up temp prompt file
+    if (session.promptFile) {
+      try { fs.unlinkSync(session.promptFile); } catch { /* ignore */ }
+    }
+
+    this.#sessions.delete(id);
+    this.emit('session_removed', { sessionId: id });
+    return { removed: true, wasRunning };
+  }
+
+  /**
    * Return the concatenated ring-buffer output for a session.
    * @param {string} id
    * @returns {string}
