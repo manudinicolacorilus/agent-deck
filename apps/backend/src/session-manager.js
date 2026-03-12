@@ -34,9 +34,17 @@ export default class SessionManager extends EventEmitter {
 
     const id = uuidv4();
     const template = cmdTemplate || config.COPILOT_CMD_TEMPLATE;
+
+    // Escape prompt for safe PowerShell interpolation:
+    // Replace single quotes with two single quotes (PS escape) so the
+    // prompt can contain markdown, special chars, etc. without being
+    // parsed as PowerShell code.
+    const safePrompt = (prompt || '').replace(/'/g, "''");
+    const safeWorkDir = (workDir || process.cwd()).replace(/'/g, "''");
+
     const cmd = template
-      .replace(/\{workDir\}/g, workDir || process.cwd())
-      .replace(/\{prompt\}/g, prompt || '');
+      .replace(/\{workDir\}/g, safeWorkDir)
+      .replace(/\{prompt\}/g, safePrompt);
 
     const ptyProcess = pty.spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-Command', cmd], {
       name: 'xterm-256color',
