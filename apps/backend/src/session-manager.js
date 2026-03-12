@@ -38,42 +38,51 @@ export default class SessionManager extends EventEmitter {
     const id = uuidv4();
     const template = cmdTemplate || config.COPILOT_CMD_TEMPLATE;
     const resolvedWorkDir = workDir || process.cwd();
+    const tmpDir = path.join(os.tmpdir(), 'agent-deck');
+    fs.mkdirSync(tmpDir, { recursive: true });
 
-    // Write prompt to a temp file so it never hits the command line.
-    // This avoids PowerShell parsing markdown/special chars as code
-    // and sidesteps Windows command-line length limits.
-    let promptFile = null;
-    if (prompt) {
-      const tmpDir = path.join(os.tmpdir(), 'agent-deck');
-      fs.mkdirSync(tmpDir, { recursive: true });
-      promptFile = path.join(tmpDir, `${id}.prompt.txt`);
-      fs.writeFileSync(promptFile, prompt, 'utf8');
-    }
-
-    // Build the command: replace {prompt} with the file content read inline,
-    // and {promptFile} with the path for agents that support file input.
+    // Generate a temporary .ps1 wrapper script that:
+    // 1. Assigns the prompt to a variable via a here-string (@'...'@)
+    //    which is 100% literal — no escaping needed for any characters
+    // 2. Runs the actual command template with the variable
+    //
+    // This completely avoids prompt text hitting the command line where
+    // PowerShell would parse markdown chars (*, -, backticks) as operators.
     const safeWorkDir = resolvedWorkDir.replace(/'/g, "''");
-    let cmd = template.replace(/\{workDir\}/g, safeWorkDir);
+    const cmdWithPlaceholders = template.replace(/\{workDir\}/g, safeWorkDir);
 
-    if (promptFile) {
-      // Replace {prompt} with an inline PS expression that reads the file
-      const safePath = promptFile.replace(/'/g, "''");
-      cmd = cmd
-        .replace(/\{prompt\}/g, `$(Get-Content -Raw '${safePath}')`)
-        .replace(/\{promptFile\}/g, safePath);
+    let scriptContent;
+    if (prompt) {
+      // Here-string: everything between @'\n and \n'@ is literal
+      // The only rule: '@ must be at the start of a line
+      scriptContent = [
+        `$__agentPrompt = @'`,
+        prompt,
+        `'@`,
+        cmdWithPlaceholders
+          .replace(/\{prompt\}/g, '$__agentPrompt')
+          .replace(/\{promptFile\}/g, ''),
+      ].join('\n');
     } else {
-      cmd = cmd
+      scriptContent = cmdWithPlaceholders
         .replace(/\{prompt\}/g, '')
         .replace(/\{promptFile\}/g, '');
     }
 
-    const ptyProcess = pty.spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-Command', cmd], {
-      name: 'xterm-256color',
-      cols: 120,
-      rows: 30,
-      cwd: resolvedWorkDir,
-      env: process.env,
-    });
+    const wrapperScript = path.join(tmpDir, `${id}.wrapper.ps1`);
+    fs.writeFileSync(wrapperScript, scriptContent, 'utf8');
+
+    const ptyProcess = pty.spawn(
+      'powershell.exe',
+      ['-ExecutionPolicy', 'Bypass', '-File', wrapperScript],
+      {
+        name: 'xterm-256color',
+        cols: 120,
+        rows: 30,
+        cwd: resolvedWorkDir,
+        env: process.env,
+      },
+    );
 
     const session = {
       id,
@@ -81,7 +90,7 @@ export default class SessionManager extends EventEmitter {
       label: label || `Session ${id.slice(0, 8)}`,
       workDir: resolvedWorkDir,
       prompt: prompt || '',
-      promptFile,
+      wrapperScript,
       state: SESSION_STATE.RUNNING,
       createdAt: new Date().toISOString(),
       pty: ptyProcess,
@@ -99,9 +108,9 @@ export default class SessionManager extends EventEmitter {
       session.state = SESSION_STATE.STOPPED;
       session.exitCode = exitCode;
       session.signal = signal;
-      // Clean up temp prompt file
-      if (session.promptFile) {
-        try { fs.unlinkSync(session.promptFile); } catch { /* ignore */ }
+      // Clean up temp wrapper script
+      if (session.wrapperScript) {
+        try { fs.unlinkSync(session.wrapperScript); } catch { /* ignore */ }
       }
       this.emit('exit', { sessionId: id, exitCode, signal });
     });
@@ -186,7 +195,7 @@ export default class SessionManager extends EventEmitter {
    * Return a plain object safe for JSON serialisation (strips the pty handle).
    */
   static serialise(session) {
-    const { pty, ringBuffer, ringBufferBytes, promptFile, ...rest } = session;
+    const { pty, ringBuffer, ringBufferBytes, wrapperScript, ...rest } = session;
     return rest;
   }
 }

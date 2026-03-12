@@ -10,7 +10,7 @@ const config = {
   RING_BUFFER_SIZE: DEFAULTS.RING_BUFFER_SIZE,
   COPILOT_CMD_TEMPLATE:
     process.env.COPILOT_CMD_TEMPLATE ||
-    `powershell.exe -ExecutionPolicy Bypass -File "${path.resolve(__dirname, '..', 'test-fixtures', 'mock-agent.ps1')}" -Prompt "{prompt}"`,
+    `powershell.exe -ExecutionPolicy Bypass -File "${path.resolve(__dirname, '..', 'test-fixtures', 'mock-agent.ps1')}" -Prompt {prompt}`,
   CORS_ORIGINS: ['http://localhost:5173', 'http://localhost:3001'],
 };
 
