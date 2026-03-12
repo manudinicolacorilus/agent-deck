@@ -101,7 +101,7 @@ describe('SessionManager — engine support', () => {
   });
 
   // ------------------------------------------------------------------
-  it('create() with engine "claude" pipes prompt file to claude -p', () => {
+  it('create() with engine "claude" passes prompt file as argument in interactive mode', () => {
     manager.createSession({
       workDir: 'C:\\test',
       prompt: 'fix bug',
@@ -112,8 +112,9 @@ describe('SessionManager — engine support', () => {
     const args = pty.spawn.mock.calls[0][1];
     const cmd = args.join(' ');
     expect(cmd).toContain('Get-Content -Raw');
-    expect(cmd).toContain('| claude');
-    expect(cmd).toContain('-p');
+    expect(cmd).toContain('claude');
+    expect(cmd).toContain('-- (Get-Content');
+    expect(cmd).not.toMatch(/claude\s.*-p\b/);
     // Prompt is written to a temp file, not inline
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       expect.stringContaining('agent-deck-prompt'),

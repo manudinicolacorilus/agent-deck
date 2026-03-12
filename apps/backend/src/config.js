@@ -43,7 +43,7 @@ const config = {
           shell: 'powershell.exe',
           args: [
             '-NoLogo', '-NoProfile', '-Command',
-            `cd '${workDir}'; Get-Content -Raw '${promptFile}' | claude ${options.yolo ? '--dangerously-skip-permissions ' : ''}-p`,
+            `cd '${workDir}'; claude ${options.yolo ? '--dangerously-skip-permissions ' : ''}-- (Get-Content -Raw '${promptFile}')`,
           ],
           promptFile,
         };
