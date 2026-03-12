@@ -25,45 +25,39 @@ export default class SessionManager extends EventEmitter {
    * @param {string}  opts.workDir      Working directory for the agent
    * @param {string}  opts.prompt       Prompt text to pass to the agent
    * @param {string}  [opts.label]      Human-readable label
-   * @param {string}  [opts.cmdTemplate] Per-session command template override
+   * @param {string}  opts.engine       Engine key ("copilot" or "claude")
+   * @param {object}  [opts.options]    Additional options
+   * @param {boolean} [opts.options.yolo] Whether to run in yolo mode
    * @returns {object} Serialised session (without pty)
    */
-  createSession({ workDir, prompt, label, cmdTemplate }) {
+  createSession({ workDir, prompt, label, engine, options = {} }) {
     if (this.#sessions.size >= config.MAX_SESSIONS) {
       throw new Error(
         `Session limit reached (${config.MAX_SESSIONS}). Kill an existing session first.`,
       );
     }
 
-    const id = uuidv4();
-    const template = cmdTemplate || config.COPILOT_CMD_TEMPLATE;
-    // Always resolve to an absolute path
-    const resolvedWorkDir = path.resolve(workDir || process.cwd());
-    const tmpDir = path.join(os.tmpdir(), 'agent-deck');
-    fs.mkdirSync(tmpDir, { recursive: true });
-
-    // Write prompt to a .md file. The agent CLI reads the file path instead
-    // of receiving the raw prompt text as a CLI argument. This avoids all
-    // shell parsing issues with markdown, special chars, long text, etc.
-    let promptFile = null;
-    if (prompt) {
-      promptFile = path.join(tmpDir, `${id}.prompt.md`);
-      fs.writeFileSync(promptFile, prompt, 'utf8');
+    if (!engine || !config.ENGINES[engine]) {
+      throw new Error(
+        `Invalid engine "${engine}". Available engines: ${Object.keys(config.ENGINES).join(', ')}`,
+      );
     }
 
-    // Replace placeholders in the template
-    const cmd = template
-      .replace(/\{workDir\}/g, resolvedWorkDir)
-      .replace(/\{promptFile\}/g, promptFile || '')
-      .replace(/\{prompt\}/g, promptFile
-        ? `Read and execute the instructions in ${promptFile}`
-        : '');
+    const id = uuidv4();
+    const resolvedWorkDir = path.resolve(workDir || process.cwd());
+    const yolo = Boolean(options.yolo);
 
-    // Spawn PowerShell with -Command. The prompt text never appears in the
-    // command — only a short file path reference does.
+    // Build command using engine config
+    const { shell, args } = config.ENGINES[engine].buildCommand(
+      resolvedWorkDir,
+      prompt || '',
+      { yolo },
+    );
+
+    // Spawn PTY
     const ptyProcess = pty.spawn(
-      'powershell.exe',
-      ['-ExecutionPolicy', 'Bypass', '-Command', cmd],
+      shell,
+      args,
       {
         name: 'xterm-256color',
         cols: 120,
@@ -79,7 +73,8 @@ export default class SessionManager extends EventEmitter {
       label: label || `Session ${id.slice(0, 8)}`,
       workDir: resolvedWorkDir,
       prompt: prompt || '',
-      promptFile,
+      engine,
+      yolo,
       state: SESSION_STATE.RUNNING,
       createdAt: new Date().toISOString(),
       pty: ptyProcess,
@@ -97,10 +92,6 @@ export default class SessionManager extends EventEmitter {
       session.state = SESSION_STATE.STOPPED;
       session.exitCode = exitCode;
       session.signal = signal;
-      // Clean up temp prompt file
-      if (session.promptFile) {
-        try { fs.unlinkSync(session.promptFile); } catch { /* ignore */ }
-      }
       this.emit('exit', { sessionId: id, exitCode, signal });
     });
 
@@ -173,11 +164,6 @@ export default class SessionManager extends EventEmitter {
       session.state = SESSION_STATE.STOPPED;
     }
 
-    // Clean up temp prompt file
-    if (session.promptFile) {
-      try { fs.unlinkSync(session.promptFile); } catch { /* ignore */ }
-    }
-
     this.#sessions.delete(id);
     this.emit('session_removed', { sessionId: id });
     return { removed: true, wasRunning };
@@ -224,7 +210,7 @@ export default class SessionManager extends EventEmitter {
    * Return a plain object safe for JSON serialisation (strips the pty handle).
    */
   static serialise(session) {
-    const { pty, ringBuffer, ringBufferBytes, promptFile, ...rest } = session;
+    const { pty, ringBuffer, ringBufferBytes, ...rest } = session;
     return rest;
   }
 }

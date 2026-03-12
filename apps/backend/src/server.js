@@ -4,6 +4,7 @@ import cors from 'cors';
 import config from './config.js';
 import SessionManager from './session-manager.js';
 import setupWebSocket from './ws-handler.js';
+import { listDirectories, getDriveRoots } from './browse-handler.js';
 import { API } from '@agent-deck/shared';
 
 /**
@@ -41,9 +42,15 @@ function buildApp(sessionManager) {
 
   // --- Create session --------------------------------------------------
   app.post(API.SESSIONS, (req, res) => {
-    const { workDir, prompt, label, cmdTemplate } = req.body;
+    const { workDir, prompt, label, engine, yolo } = req.body;
     try {
-      const session = sessionManager.createSession({ workDir, prompt, label, cmdTemplate });
+      const session = sessionManager.createSession({
+        workDir,
+        prompt,
+        label,
+        engine,
+        options: { yolo: Boolean(yolo) },
+      });
       res.status(201).json(session);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -68,6 +75,40 @@ function buildApp(sessionManager) {
     } else {
       res.status(404).json({ error: 'Session not found' });
     }
+  });
+
+  // --- Browse directories ----------------------------------------------
+  app.get('/api/browse', async (req, res) => {
+    try {
+      const result = await listDirectories(req.query.path);
+      res.json(result);
+    } catch (err) {
+      if (err.code === 'ENOENT' || err.code === 'ENOTDIR') {
+        res.status(400).json({ error: 'Directory not found' });
+      } else if (err.code === 'EINVAL') {
+        res.status(400).json({ error: err.message });
+      } else {
+        res.status(400).json({ error: 'Cannot access directory' });
+      }
+    }
+  });
+
+  app.get('/api/browse/roots', async (_req, res) => {
+    try {
+      const result = await getDriveRoots();
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to list drive roots' });
+    }
+  });
+
+  // --- Available engines -----------------------------------------------
+  app.get('/api/engines', (_req, res) => {
+    const engines = Object.entries(config.ENGINES).map(([id, eng]) => ({
+      id,
+      label: eng.label,
+    }));
+    res.json({ engines });
   });
 
   return app;
