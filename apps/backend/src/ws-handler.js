@@ -1,5 +1,5 @@
 import { WebSocketServer } from 'ws';
-import { WS_MSG } from '@copilot-ui/shared';
+import { WS_MSG } from '@agent-deck/shared';
 import url from 'node:url';
 
 /**

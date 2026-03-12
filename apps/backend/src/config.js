@@ -1,4 +1,4 @@
-import { DEFAULTS } from '@copilot-ui/shared';
+import { DEFAULTS } from '@agent-deck/shared';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 

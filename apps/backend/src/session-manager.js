@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events';
 import pty from 'node-pty';
 import { v4 as uuidv4 } from 'uuid';
 import config from './config.js';
-import { SESSION_STATE } from '@copilot-ui/shared';
+import { SESSION_STATE } from '@agent-deck/shared';
 
 /**
  * Manages PTY-backed agent sessions with ring-buffered output.

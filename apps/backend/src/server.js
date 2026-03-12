@@ -4,7 +4,7 @@ import cors from 'cors';
 import config from './config.js';
 import SessionManager from './session-manager.js';
 import setupWebSocket from './ws-handler.js';
-import { API } from '@copilot-ui/shared';
+import { API } from '@agent-deck/shared';
 
 /**
  * Create a fresh SessionManager instance (useful for testing).
