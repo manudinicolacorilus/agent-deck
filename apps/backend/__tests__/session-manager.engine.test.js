@@ -97,6 +97,20 @@ describe('SessionManager — engine support', () => {
   });
 
   // ------------------------------------------------------------------
+  it('create() with engine "claude" uses -p flag for prompt', () => {
+    manager.createSession({
+      workDir: 'C:\\test',
+      prompt: 'fix bug',
+      engine: 'claude',
+      options: { yolo: false },
+    });
+
+    const args = pty.spawn.mock.calls[0][1];
+    const cmd = args.join(' ');
+    expect(cmd).toContain("-p 'fix bug'");
+  });
+
+  // ------------------------------------------------------------------
   it('create() with invalid engine throws error', () => {
     expect(() =>
       manager.createSession({
