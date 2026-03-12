@@ -3,15 +3,15 @@
   "private": true,
   "workspaces": [
     "packages/shared",
-    "packages/backend",
-    "packages/frontend"
+    "apps/backend",
+    "apps/frontend"
   ],
   "scripts": {
     "dev": "concurrently -n be,fe -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "node packages/backend/src/index.js",
-    "dev:frontend": "npm run dev --workspace=packages/frontend",
-    "build": "npm run build --workspace=packages/frontend",
-    "test": "npm test --workspace=packages/backend"
+    "dev:backend": "node apps/backend/src/index.js",
+    "dev:frontend": "npm run dev --workspace=apps/frontend",
+    "build": "npm run build --workspace=apps/frontend",
+    "test": "npm test --workspace=apps/backend"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
