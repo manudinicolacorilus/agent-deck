@@ -59,8 +59,11 @@ export default class SessionManager extends EventEmitter {
         `$__agentPrompt = @'`,
         prompt,
         `'@`,
+        // Double-quote the variable so PowerShell passes it as a single
+        // argument to native executables (without quotes, PS splits
+        // multi-line strings into separate args at newline boundaries).
         cmdWithPlaceholders
-          .replace(/\{prompt\}/g, '$__agentPrompt')
+          .replace(/\{prompt\}/g, '"$__agentPrompt"')
           .replace(/\{promptFile\}/g, ''),
       ].join('\n');
     } else {
