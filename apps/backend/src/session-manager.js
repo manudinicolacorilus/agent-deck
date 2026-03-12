@@ -48,7 +48,7 @@ export default class SessionManager extends EventEmitter {
     const yolo = Boolean(options.yolo);
 
     // Build command using engine config
-    const { shell, args } = config.ENGINES[engine].buildCommand(
+    const { shell, args, promptFile } = config.ENGINES[engine].buildCommand(
       resolvedWorkDir,
       prompt || '',
       { yolo },
@@ -93,6 +93,10 @@ export default class SessionManager extends EventEmitter {
       session.exitCode = exitCode;
       session.signal = signal;
       this.emit('exit', { sessionId: id, exitCode, signal });
+      // Clean up the temp prompt file
+      if (promptFile) {
+        fs.unlink(promptFile, () => {});
+      }
     });
 
     this.#sessions.set(id, session);
