@@ -41,3 +41,10 @@ export async function killSession(id) {
   });
   return handleResponse(response);
 }
+
+export async function closeSession(id) {
+  const response = await fetch(`${BASE_URL}/api/sessions/${id}/close`, {
+    method: 'DELETE',
+  });
+  return handleResponse(response);
+}

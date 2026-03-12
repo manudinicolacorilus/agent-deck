@@ -22,7 +22,7 @@ const styles = {
 };
 
 export default function App() {
-  const { sessions, loading, error, createSession, killSession } = useAgentSessions();
+  const { sessions, loading, error, createSession, killSession, closeSession } = useAgentSessions();
   const health = useBackendHealth();
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -35,11 +35,15 @@ export default function App() {
     await killSession(id);
   }, [killSession]);
 
+  const handleClose = useCallback(async (id) => {
+    await closeSession(id);
+  }, [closeSession]);
+
   return (
     <div style={styles.layout}>
       <Header onNewAgent={() => setModalOpen(true)} />
       <div style={styles.main}>
-        <AgentGrid sessions={sessions} onKill={handleKill} />
+        <AgentGrid sessions={sessions} onKill={handleKill} onClose={handleClose} />
       </div>
       <BottomBar health={health.connected} sessionCount={sessions.length} />
       <NewAgentModal

@@ -20,6 +20,22 @@ import url from 'node:url';
 export default function setupWebSocket(server, sessionManager) {
   const wss = new WebSocketServer({ server, path: '/ws' });
 
+  // Track WS clients per session for broadcasting session_closed
+  const sessionClients = new Map(); // sessionId → Set<ws>
+
+  sessionManager.on('session_removed', ({ sessionId }) => {
+    const clients = sessionClients.get(sessionId);
+    if (clients) {
+      for (const client of clients) {
+        if (client.readyState === client.OPEN) {
+          client.send(JSON.stringify({ type: WS_MSG.SESSION_CLOSED, id: sessionId }));
+          client.close();
+        }
+      }
+      sessionClients.delete(sessionId);
+    }
+  });
+
   wss.on('connection', (ws, req) => {
     // ---- resolve the target session -----------------------------------
     const parsed = url.parse(req.url, true);
@@ -37,6 +53,12 @@ export default function setupWebSocket(server, sessionManager) {
       ws.close();
       return;
     }
+
+    // ---- track this client for session_closed broadcasting ------------
+    if (!sessionClients.has(sessionId)) {
+      sessionClients.set(sessionId, new Set());
+    }
+    sessionClients.get(sessionId).add(ws);
 
     // ---- send buffered output (catch-up) ------------------------------
     const catchUp = sessionManager.getSessionOutput(sessionId);
@@ -97,6 +119,11 @@ export default function setupWebSocket(server, sessionManager) {
     ws.on('close', () => {
       sessionManager.off('data', onData);
       sessionManager.off('exit', onExit);
+      const clients = sessionClients.get(sessionId);
+      if (clients) {
+        clients.delete(ws);
+        if (clients.size === 0) sessionClients.delete(sessionId);
+      }
     });
   });
 

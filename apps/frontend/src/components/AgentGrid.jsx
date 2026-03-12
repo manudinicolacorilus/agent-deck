@@ -35,7 +35,7 @@ const styles = {
   },
 };
 
-export default function AgentGrid({ sessions, onKill }) {
+export default function AgentGrid({ sessions, onKill, onClose }) {
   if (!sessions || sessions.length === 0) {
     return (
       <div style={styles.empty}>
@@ -50,7 +50,7 @@ export default function AgentGrid({ sessions, onKill }) {
   return (
     <div style={styles.grid}>
       {sessions.map((session) => (
-        <AgentPanel key={session.id} session={session} onKill={onKill}>
+        <AgentPanel key={session.id} session={session} onKill={onKill} onClose={onClose}>
           <TerminalView sessionId={session.id} />
         </AgentPanel>
       ))}

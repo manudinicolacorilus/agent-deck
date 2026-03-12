@@ -95,6 +95,13 @@ export default function TerminalView({ sessionId, style }) {
                 `\r\n\x1b[33m[Session exited${msg.exitCode != null ? ` with code ${msg.exitCode}` : ''}]\x1b[0m\r\n`
               );
               break;
+            case 'session_closed':
+              terminal.write(
+                '\r\n\x1b[90m--- Session closed ---\x1b[0m\r\n'
+              );
+              if (ws) ws.close();
+              disposed = true;
+              return;
             case 'error':
               terminal.write(
                 `\r\n\x1b[31m[Error: ${msg.message || 'unknown'}]\x1b[0m\r\n`

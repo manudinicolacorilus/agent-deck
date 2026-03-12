@@ -1,5 +1,6 @@
 import React from 'react';
 import StatusBadge from './StatusBadge';
+import ConfirmKillModal from './ConfirmKillModal';
 import useElapsedTime from '../hooks/useElapsedTime';
 
 const styles = {
@@ -26,6 +27,12 @@ const styles = {
     gap: 10,
     minWidth: 0,
   },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 0,
+  },
   label: {
     fontSize: 14,
     fontWeight: 600,
@@ -47,6 +54,25 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.15s ease',
     fontFamily: 'inherit',
+    flexShrink: 0,
+  },
+  closeBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 28,
+    height: 28,
+    padding: 0,
+    background: 'transparent',
+    color: '#8b949e',
+    border: '1px solid transparent',
+    borderRadius: 6,
+    fontSize: 16,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+    fontFamily: 'inherit',
+    lineHeight: 1,
     flexShrink: 0,
   },
   terminal: {
@@ -97,9 +123,26 @@ const styles = {
   },
 };
 
-export default function AgentPanel({ session, onKill, children }) {
+export default function AgentPanel({ session, onKill, onClose, children }) {
   const [killHover, setKillHover] = React.useState(false);
+  const [closeHover, setCloseHover] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
   const elapsed = useElapsedTime(session.createdAt || session.startedAt);
+
+  const isRunning = session.state === 'running';
+
+  const handleCloseClick = () => {
+    if (isRunning) {
+      setConfirmOpen(true);
+    } else {
+      onClose?.(session.id);
+    }
+  };
+
+  const handleConfirmKill = () => {
+    setConfirmOpen(false);
+    onClose?.(session.id);
+  };
 
   return (
     <div style={styles.card}>
@@ -108,18 +151,36 @@ export default function AgentPanel({ session, onKill, children }) {
           <span style={styles.label}>{session.label || session.id}</span>
           <StatusBadge state={session.state} />
         </div>
-        <button
-          style={{
-            ...styles.killBtn,
-            background: killHover ? 'rgba(218, 54, 51, 0.15)' : 'transparent',
-            borderColor: killHover ? '#da3633' : '#da363366',
-          }}
-          onMouseEnter={() => setKillHover(true)}
-          onMouseLeave={() => setKillHover(false)}
-          onClick={() => onKill?.(session.id)}
-        >
-          Kill
-        </button>
+        <div style={styles.headerRight}>
+          <button
+            style={{
+              ...styles.killBtn,
+              background: killHover ? 'rgba(218, 54, 51, 0.15)' : 'transparent',
+              borderColor: killHover ? '#da3633' : '#da363366',
+            }}
+            onMouseEnter={() => setKillHover(true)}
+            onMouseLeave={() => setKillHover(false)}
+            onClick={() => onKill?.(session.id)}
+          >
+            Kill
+          </button>
+          <button
+            data-testid="close-button"
+            style={{
+              ...styles.closeBtn,
+              color: closeHover ? '#e6edf3' : '#8b949e',
+              borderColor: closeHover ? '#30363d' : 'transparent',
+              background: closeHover ? '#21262d' : 'transparent',
+            }}
+            onMouseEnter={() => setCloseHover(true)}
+            onMouseLeave={() => setCloseHover(false)}
+            onClick={handleCloseClick}
+            aria-label="Close panel"
+            title="Close panel"
+          >
+            &#10005;
+          </button>
+        </div>
       </div>
 
       <div style={styles.terminal}>
@@ -148,6 +209,13 @@ export default function AgentPanel({ session, onKill, children }) {
           </span>
         )}
       </div>
+
+      <ConfirmKillModal
+        isOpen={confirmOpen}
+        agentLabel={session.label || session.id}
+        onConfirmKill={handleConfirmKill}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
