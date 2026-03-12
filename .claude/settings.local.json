@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree /d/github/copilot-ui -L 3 -I 'node_modules|dist' 2>/dev/null || find /d/github/copilot-ui -type f -name \"*.js\" -o -name \"*.jsx\" | grep -E \"^[^/]*node_modules\" -v | sort)",
+      "Bash(git checkout:*)",
+      "Bash(cd D:/github/copilot-ui && npx vitest run apps/backend/__tests__/session-manager.engine.test.js 2>&1)",
+      "Bash(cd D:/github/copilot-ui && gh pr create --title \"fix: use -p flag for claude CLI prompt argument\" --body \"$\\(cat <<'EOF'\n## Summary\n- Adds `-p` flag to the `claude` CLI command so the prompt is explicitly passed as a prompt argument, not parsed as a CLI option\n- Fixes crash when user prompts start with a dash \\(e.g. `-m ...`\\) causing `error: unknown option` \n- Adds test to verify the `-p` flag is present in the constructed command\n\n## Test plan\n- [x] Existing engine tests pass \\(8/8\\)\n- [ ] Manually create a claude session with a prompt starting with `-m` and verify it no longer errors\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\nEOF\n\\)\")"
+    ]
+  }
+}

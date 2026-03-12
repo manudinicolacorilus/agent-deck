@@ -1,4 +1,18 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { DEFAULTS } from '@agent-deck/shared';
+
+/**
+ * Write prompt to a temp file and return its path.
+ * This avoids all shell-escaping issues with special characters in prompts.
+ */
+function writePromptFile(prompt) {
+  const tmpDir = os.tmpdir();
+  const tmpFile = path.join(tmpDir, `agent-deck-prompt-${Date.now()}-${Math.random().toString(36).slice(2)}.txt`);
+  fs.writeFileSync(tmpFile, prompt, 'utf8');
+  return tmpFile;
+}
 
 const config = {
   PORT: parseInt(process.env.PORT, 10) || DEFAULTS.BACKEND_PORT,
@@ -9,23 +23,31 @@ const config = {
   ENGINES: {
     copilot: {
       label: 'GitHub Copilot',
-      buildCommand: (workDir, prompt, options) => ({
-        shell: 'powershell.exe',
-        args: [
-          '-NoLogo', '-NoProfile', '-Command',
-          `cd '${workDir}'; gh copilot agent ${options.yolo ? '--yolo ' : ''}--prompt '${prompt.replace(/'/g, "''")}'`,
-        ],
-      }),
+      buildCommand: (workDir, prompt, options) => {
+        const promptFile = writePromptFile(prompt);
+        return {
+          shell: 'powershell.exe',
+          args: [
+            '-NoLogo', '-NoProfile', '-Command',
+            `cd '${workDir}'; gh copilot agent ${options.yolo ? '--yolo ' : ''}--prompt (Get-Content -Raw '${promptFile}')`,
+          ],
+          promptFile,
+        };
+      },
     },
     claude: {
       label: 'Claude Code',
-      buildCommand: (workDir, prompt, options) => ({
-        shell: 'powershell.exe',
-        args: [
-          '-NoLogo', '-NoProfile', '-Command',
-          `cd '${workDir}'; claude ${options.yolo ? '--dangerously-skip-permissions ' : ''}-p '${prompt.replace(/'/g, "''")}'`,
-        ],
-      }),
+      buildCommand: (workDir, prompt, options) => {
+        const promptFile = writePromptFile(prompt);
+        return {
+          shell: 'powershell.exe',
+          args: [
+            '-NoLogo', '-NoProfile', '-Command',
+            `cd '${workDir}'; Get-Content -Raw '${promptFile}' | claude ${options.yolo ? '--dangerously-skip-permissions ' : ''}-p`,
+          ],
+          promptFile,
+        };
+      },
     },
   },
 };

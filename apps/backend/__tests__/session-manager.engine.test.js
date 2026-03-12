@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import fs from 'node:fs';
 
 // ---------------------------------------------------------------------------
 // Mock node-pty
@@ -15,6 +16,9 @@ vi.mock('node-pty', () => ({
     })),
   },
 }));
+
+// Mock fs.writeFileSync to avoid actual file writes in tests
+vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
 
 import pty from 'node-pty';
 import SessionManager from '../src/session-manager.js';
@@ -97,7 +101,7 @@ describe('SessionManager — engine support', () => {
   });
 
   // ------------------------------------------------------------------
-  it('create() with engine "claude" uses -p flag for prompt', () => {
+  it('create() with engine "claude" pipes prompt file to claude -p', () => {
     manager.createSession({
       workDir: 'C:\\test',
       prompt: 'fix bug',
@@ -107,7 +111,15 @@ describe('SessionManager — engine support', () => {
 
     const args = pty.spawn.mock.calls[0][1];
     const cmd = args.join(' ');
-    expect(cmd).toContain("-p 'fix bug'");
+    expect(cmd).toContain('Get-Content -Raw');
+    expect(cmd).toContain('| claude');
+    expect(cmd).toContain('-p');
+    // Prompt is written to a temp file, not inline
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      expect.stringContaining('agent-deck-prompt'),
+      'fix bug',
+      'utf8',
+    );
   });
 
   // ------------------------------------------------------------------
