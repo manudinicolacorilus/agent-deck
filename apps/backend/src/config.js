@@ -23,7 +23,7 @@ const config = {
         shell: 'powershell.exe',
         args: [
           '-NoLogo', '-NoProfile', '-Command',
-          `cd '${workDir}'; claude ${options.yolo ? '--dangerously-skip-permissions ' : ''}'${prompt.replace(/'/g, "''")}'`,
+          `cd '${workDir}'; claude ${options.yolo ? '--dangerously-skip-permissions ' : ''}-p '${prompt.replace(/'/g, "''")}'`,
         ],
       }),
     },
