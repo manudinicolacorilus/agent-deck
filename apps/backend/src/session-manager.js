@@ -1,4 +1,7 @@
 import { EventEmitter } from 'node:events';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import pty from 'node-pty';
 import { v4 as uuidv4 } from 'uuid';
 import config from './config.js';
@@ -34,24 +37,49 @@ export default class SessionManager extends EventEmitter {
 
     const id = uuidv4();
     const template = cmdTemplate || config.COPILOT_CMD_TEMPLATE;
-    const cmd = template
-      .replace(/\{workDir\}/g, workDir || process.cwd())
-      .replace(/\{prompt\}/g, prompt || '');
+    // Always resolve to an absolute path
+    const resolvedWorkDir = path.resolve(workDir || process.cwd());
+    const tmpDir = path.join(os.tmpdir(), 'agent-deck');
+    fs.mkdirSync(tmpDir, { recursive: true });
 
-    const ptyProcess = pty.spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-Command', cmd], {
-      name: 'xterm-256color',
-      cols: 120,
-      rows: 30,
-      cwd: workDir || process.cwd(),
-      env: process.env,
-    });
+    // Write prompt to a .md file. The agent CLI reads the file path instead
+    // of receiving the raw prompt text as a CLI argument. This avoids all
+    // shell parsing issues with markdown, special chars, long text, etc.
+    let promptFile = null;
+    if (prompt) {
+      promptFile = path.join(tmpDir, `${id}.prompt.md`);
+      fs.writeFileSync(promptFile, prompt, 'utf8');
+    }
+
+    // Replace placeholders in the template
+    const cmd = template
+      .replace(/\{workDir\}/g, resolvedWorkDir)
+      .replace(/\{promptFile\}/g, promptFile || '')
+      .replace(/\{prompt\}/g, promptFile
+        ? `Read and execute the instructions in ${promptFile}`
+        : '');
+
+    // Spawn PowerShell with -Command. The prompt text never appears in the
+    // command — only a short file path reference does.
+    const ptyProcess = pty.spawn(
+      'powershell.exe',
+      ['-ExecutionPolicy', 'Bypass', '-Command', cmd],
+      {
+        name: 'xterm-256color',
+        cols: 120,
+        rows: 30,
+        cwd: resolvedWorkDir,
+        env: process.env,
+      },
+    );
 
     const session = {
       id,
       pid: ptyProcess.pid,
       label: label || `Session ${id.slice(0, 8)}`,
-      workDir: workDir || process.cwd(),
+      workDir: resolvedWorkDir,
       prompt: prompt || '',
+      promptFile,
       state: SESSION_STATE.RUNNING,
       createdAt: new Date().toISOString(),
       pty: ptyProcess,
@@ -69,6 +97,10 @@ export default class SessionManager extends EventEmitter {
       session.state = SESSION_STATE.STOPPED;
       session.exitCode = exitCode;
       session.signal = signal;
+      // Clean up temp prompt file
+      if (session.promptFile) {
+        try { fs.unlinkSync(session.promptFile); } catch { /* ignore */ }
+      }
       this.emit('exit', { sessionId: id, exitCode, signal });
     });
 
@@ -152,7 +184,7 @@ export default class SessionManager extends EventEmitter {
    * Return a plain object safe for JSON serialisation (strips the pty handle).
    */
   static serialise(session) {
-    const { pty, ringBuffer, ringBufferBytes, ...rest } = session;
+    const { pty, ringBuffer, ringBufferBytes, promptFile, ...rest } = session;
     return rest;
   }
 }
