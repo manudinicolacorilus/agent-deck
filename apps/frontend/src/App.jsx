@@ -35,7 +35,7 @@ export default function App() {
   const { agents, createAgent, deleteAgent, assignPrompt } = useAgents();
   const health = useBackendHealth();
   const activities = useActivityTracker(sessions);
-  const visualStates = useAgentVisualStates(agents, sessions);
+  const visualStates = useAgentVisualStates(agents, sessions, activities);
   const { soundEnabled, toggleSound } = useSoundEffects(activities, visualStates, agents, sessions);
   const { workflows, startWorkflow, cancelWorkflow } = useWorkflows();
 

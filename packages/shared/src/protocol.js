@@ -36,9 +36,13 @@ export const ACTIVITY_STATE = {
 // Agent visual states (for office view animations)
 export const AGENT_VISUAL_STATE = {
   IDLE_AT_COFFEE: 'idle_at_coffee',
+  CHATTING_AT_COOLER: 'chatting_at_cooler',
+  SITTING_ON_COUCH: 'sitting_on_couch',
   WALKING_TO_DESK: 'walking_to_desk',
   WORKING_AT_DESK: 'working_at_desk',
+  THINKING_AT_DESK: 'thinking_at_desk',
   WALKING_TO_COFFEE: 'walking_to_coffee',
+  WALKING_TO_COOLER: 'walking_to_cooler',
 };
 
 // Agent roles

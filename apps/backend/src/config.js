@@ -28,7 +28,7 @@ const config = {
         return {
           shell: 'powershell.exe',
           args: [
-            '-NoLogo', '-NoProfile', '-Command',
+            '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
             `cd '${workDir}'; copilot ${options.yolo ? '--allow-all-tools ' : ''}-p (Get-Content -Raw '${promptFile}')`,
           ],
           promptFile,
