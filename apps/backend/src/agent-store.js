@@ -67,11 +67,16 @@ class AgentStore {
 
   /**
    * Find an idle agent with the given role.
+   * Falls back to any idle agent if no role-matched agent is available.
    * @param {string} role
    * @returns {object|null}
    */
   findIdleByRole(role) {
-    return this.#agents.find((a) => a.role === role && !a.currentSessionId) || null;
+    return (
+      this.#agents.find((a) => a.role === role && !a.currentSessionId) ||
+      this.#agents.find((a) => !a.currentSessionId) ||
+      null
+    );
   }
 
   /**

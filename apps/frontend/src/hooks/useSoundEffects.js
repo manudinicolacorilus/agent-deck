@@ -52,6 +52,27 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// Cache resolved voice so we don't search every time
+let cachedVoice = null;
+let voicesLoaded = false;
+
+function loadVoices() {
+  if (!window.speechSynthesis) return;
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    voicesLoaded = true;
+    cachedVoice = voices.find(
+      (v) => v.name.includes('Male') || v.name.includes('David') || v.name.includes('Mark')
+    ) || null;
+  }
+}
+
+// Some browsers (Chrome) load voices asynchronously
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  loadVoices();
+  window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+}
+
 // Speak a phrase with a peon-like voice
 function speakPeon(text, volume = 0.7) {
   if (!window.speechSynthesis) return;
@@ -59,17 +80,15 @@ function speakPeon(text, volume = 0.7) {
   // Cancel any currently speaking utterance to avoid queue buildup
   window.speechSynthesis.cancel();
 
+  // Ensure voices are loaded
+  if (!voicesLoaded) loadVoices();
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.9;
   utterance.pitch = 0.4; // Low, grunty voice
   utterance.volume = volume;
 
-  // Try to find a male/deep voice
-  const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(
-    (v) => v.name.includes('Male') || v.name.includes('David') || v.name.includes('Mark')
-  );
-  if (preferred) utterance.voice = preferred;
+  if (cachedVoice) utterance.voice = cachedVoice;
 
   window.speechSynthesis.speak(utterance);
 }
@@ -104,11 +123,6 @@ export default function useSoundEffects(activities, visualStates, agents, sessio
       if (!next) window.speechSynthesis?.cancel();
       return next;
     });
-  }, []);
-
-  // Preload voices (some browsers need this)
-  useEffect(() => {
-    window.speechSynthesis?.getVoices();
   }, []);
 
   // Watch visual state transitions (walking to desk, going idle)
