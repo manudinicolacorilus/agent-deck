@@ -9,6 +9,8 @@ export const WS_MSG = {
   SESSION_EXIT: 'session:exit',
   SESSION_CLOSED: 'session_closed',
   ERROR: 'error',
+  ACTIVITY: 'activity',
+  WORKFLOW_UPDATE: 'workflow:update',
 };
 
 // Session states
@@ -18,6 +20,50 @@ export const SESSION_STATE = {
   ERROR: 'error',
 };
 
+// Agent activity states (detected from terminal output)
+export const ACTIVITY_STATE = {
+  IDLE: 'idle',
+  THINKING: 'thinking',
+  READING: 'reading',
+  EDITING: 'editing',
+  RUNNING_COMMAND: 'running_command',
+  WAITING_FOR_APPROVAL: 'waiting_for_approval',
+  DONE: 'done',
+  ERROR: 'error',
+};
+
+// Agent visual states (for office view animations)
+export const AGENT_VISUAL_STATE = {
+  IDLE_AT_COFFEE: 'idle_at_coffee',
+  WALKING_TO_DESK: 'walking_to_desk',
+  WORKING_AT_DESK: 'working_at_desk',
+  WALKING_TO_COFFEE: 'walking_to_coffee',
+};
+
+// Agent roles
+export const AGENT_ROLE = {
+  ARCHITECT: 'architect',
+  DEV: 'dev',
+  REVIEWER: 'reviewer',
+};
+
+// Workflow states
+export const WORKFLOW_STATE = {
+  PENDING: 'pending',
+  ARCHITECTING: 'architecting',
+  WAITING_DEV: 'waiting_dev',
+  DEVELOPING: 'developing',
+  WAITING_REVIEW: 'waiting_review',
+  REVIEWING: 'reviewing',
+  WAITING_REVISION: 'waiting_revision',
+  REVISING: 'revising',
+  DONE: 'done',
+  ERROR: 'error',
+};
+
+// Review models (used by reviewer agents via copilot)
+export const REVIEW_MODELS = ['claude-opus-4.6', 'gemini-3-pro', 'gpt-5.3-codex'];
+
 // REST API paths
 export const API = {
   HEALTH: '/api/health',
@@ -25,6 +71,11 @@ export const API = {
   SESSION: (id) => `/api/sessions/${id}`,
   SESSION_KILL: (id) => `/api/sessions/${id}/kill`,
   SESSION_CLOSE: (id) => `/api/sessions/${id}/close`,
+  AGENTS: '/api/agents',
+  AGENT: (id) => `/api/agents/${id}`,
+  AGENT_ASSIGN: (id) => `/api/agents/${id}/assign`,
+  WORKFLOWS: '/api/workflows',
+  WORKFLOW: (id) => `/api/workflows/${id}`,
 };
 
 // Defaults

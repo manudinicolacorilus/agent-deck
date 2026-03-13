@@ -5,7 +5,8 @@ import path from 'node:path';
 import pty from 'node-pty';
 import { v4 as uuidv4 } from 'uuid';
 import config from './config.js';
-import { SESSION_STATE } from '@agent-deck/shared';
+import { SESSION_STATE, ACTIVITY_STATE } from '@agent-deck/shared';
+import ActivityParser from './activity-parser.js';
 
 /**
  * Manages PTY-backed agent sessions with ring-buffered output.
@@ -30,7 +31,7 @@ export default class SessionManager extends EventEmitter {
    * @param {boolean} [opts.options.yolo] Whether to run in yolo mode
    * @returns {object} Serialised session (without pty)
    */
-  createSession({ workDir, prompt, label, engine, options = {} }) {
+  createSession({ workDir, prompt, label, engine, options = {}, agentId = null }) {
     if (this.#sessions.size >= config.MAX_SESSIONS) {
       throw new Error(
         `Session limit reached (${config.MAX_SESSIONS}). Kill an existing session first.`,
@@ -67,6 +68,12 @@ export default class SessionManager extends EventEmitter {
       },
     );
 
+    // Activity parser for detecting what the agent is doing
+    const activityParser = new ActivityParser((activity) => {
+      session.activity = activity;
+      this.emit('activity', { sessionId: id, activity });
+    });
+
     const session = {
       id,
       pid: ptyProcess.pid,
@@ -75,9 +82,12 @@ export default class SessionManager extends EventEmitter {
       prompt: prompt || '',
       engine,
       yolo,
+      agentId,
       state: SESSION_STATE.RUNNING,
+      activity: ACTIVITY_STATE.IDLE,
       createdAt: new Date().toISOString(),
       pty: ptyProcess,
+      activityParser,
       ringBuffer: [],
       ringBufferBytes: 0,
     };
@@ -85,6 +95,7 @@ export default class SessionManager extends EventEmitter {
     // Stream PTY output into the ring buffer and emit events.
     ptyProcess.onData((data) => {
       this.#pushToRingBuffer(session, data);
+      activityParser.feed(data);
       this.emit('data', { sessionId: id, data });
     });
 
@@ -92,6 +103,7 @@ export default class SessionManager extends EventEmitter {
       session.state = SESSION_STATE.STOPPED;
       session.exitCode = exitCode;
       session.signal = signal;
+      activityParser.markDone(exitCode);
       this.emit('exit', { sessionId: id, exitCode, signal });
       // Clean up the temp prompt file
       if (promptFile) {
@@ -168,6 +180,9 @@ export default class SessionManager extends EventEmitter {
       session.state = SESSION_STATE.STOPPED;
     }
 
+    if (session.activityParser) {
+      session.activityParser.dispose();
+    }
     this.#sessions.delete(id);
     this.emit('session_removed', { sessionId: id });
     return { removed: true, wasRunning };
@@ -211,10 +226,10 @@ export default class SessionManager extends EventEmitter {
   }
 
   /**
-   * Return a plain object safe for JSON serialisation (strips the pty handle).
+   * Return a plain object safe for JSON serialisation (strips internal handles).
    */
   static serialise(session) {
-    const { pty, ringBuffer, ringBufferBytes, ...rest } = session;
+    const { pty, activityParser, ringBuffer, ringBufferBytes, ...rest } = session;
     return rest;
   }
 }
