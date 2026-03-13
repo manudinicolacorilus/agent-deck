@@ -29,7 +29,7 @@ const config = {
           shell: 'powershell.exe',
           args: [
             '-NoLogo', '-NoProfile', '-Command',
-            `cd '${workDir}'; gh copilot agent ${options.yolo ? '--yolo ' : ''}--prompt (Get-Content -Raw '${promptFile}')`,
+            `cd '${workDir}'; copilot ${options.yolo ? '--allow-all-tools ' : ''}-p (Get-Content -Raw '${promptFile}')`,
           ],
           promptFile,
         };
