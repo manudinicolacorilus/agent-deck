@@ -52,6 +52,14 @@ const ACTIVITY_CONFIG = {
     statusColor: '#f8e3a1',
     glowColor: '#f8e3a133',
   },
+  waiting_for_input: {
+    screenContent: '?  ? ?',
+    screenColor: '#f8e3a1',
+    character: '\u{1F4AC}',
+    statusText: 'Asking...',
+    statusColor: '#f8e3a1',
+    glowColor: '#f8e3a133',
+  },
   done: {
     screenContent: '\u2713 \u2713 \u2713',
     screenColor: '#3fb950',

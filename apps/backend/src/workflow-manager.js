@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { v4 as uuidv4 } from 'uuid';
-import { WORKFLOW_STATE, AGENT_ROLE, REVIEW_MODELS } from '@agent-deck/shared';
+import { WORKFLOW_STATE, AGENT_ROLE, REVIEW_MODELS, ACTIVITY_STATE } from '@agent-deck/shared';
 
 /**
  * Orchestrates multi-agent workflows: Architect → Dev → Review → (loop or done).
@@ -37,6 +37,11 @@ export default class WorkflowManager extends EventEmitter {
     // Watch for session exits to advance workflows
     this.#sessionManager.on('exit', ({ sessionId, exitCode }) => {
       this.#onSessionExit(sessionId, exitCode);
+    });
+
+    // Watch for activity changes — auto-respond when workflow agents are blocked
+    this.#sessionManager.on('activity', ({ sessionId, activity }) => {
+      this.#onSessionActivity(sessionId, activity);
     });
 
     // Poll for idle agents to assign queued work
@@ -160,7 +165,9 @@ export default class WorkflowManager extends EventEmitter {
       `4. Describe the changes needed in each file`,
       `5. Identify potential risks and edge cases`,
       ``,
-      `Output your plan clearly. When done, the plan will be handed to a developer agent.`,
+      `IMPORTANT: Do NOT ask any questions. Do NOT ask for confirmation.`,
+      `Do NOT ask "shall I proceed?" or "would you like me to start?".`,
+      `Just output the complete plan and finish. The plan will be automatically handed to a developer agent.`,
     ].join('\n');
 
     try {
@@ -228,7 +235,8 @@ export default class WorkflowManager extends EventEmitter {
         ``,
         `=== INSTRUCTIONS ===`,
         `Address ALL the review remarks above. Make the requested changes.`,
-        `When done, your code will be sent for another review.`,
+        `Do NOT ask any questions or for confirmation. Just implement the changes and finish.`,
+        `When done, your code will be automatically sent for another review.`,
       ].join('\n');
     } else {
       devPrompt = [
@@ -242,7 +250,8 @@ export default class WorkflowManager extends EventEmitter {
         ``,
         `=== INSTRUCTIONS ===`,
         `Implement the plan above. Follow it closely.`,
-        `Write clean, well-structured code. When done, your code will be sent for review.`,
+        `Do NOT ask any questions or for confirmation. Just implement the code and finish.`,
+        `Write clean, well-structured code. When done, your code will be automatically sent for review.`,
       ].join('\n');
     }
 
@@ -323,6 +332,7 @@ export default class WorkflowManager extends EventEmitter {
       `- "VERDICT: CHANGES_REQUESTED" — if changes are needed (list specific remarks)`,
       ``,
       `Be thorough but fair. Only request changes for real issues.`,
+      `Do NOT ask any questions or for confirmation. Just output your review and finish.`,
     ].join('\n');
 
     try {
@@ -360,6 +370,74 @@ export default class WorkflowManager extends EventEmitter {
       wf.updatedAt = new Date().toISOString();
       this.#emitUpdate(wf);
     }
+  }
+
+  // ------------------------------------------------------------------
+  // Auto-respond: unblock workflow agents waiting for approval/input
+  // ------------------------------------------------------------------
+
+  /**
+   * When a workflow session is waiting for approval or asking a question,
+   * automatically send input so the pipeline advances to the next agent.
+   */
+  #onSessionActivity(sessionId, activity) {
+    // Only act on workflow-owned sessions
+    const wf = this.#findWorkflowBySession(sessionId);
+    if (!wf) return;
+
+    // Only auto-respond for active workflow states (not DONE/ERROR)
+    const activeStates = [
+      WORKFLOW_STATE.ARCHITECTING,
+      WORKFLOW_STATE.DEVELOPING,
+      WORKFLOW_STATE.REVISING,
+      WORKFLOW_STATE.REVIEWING,
+    ];
+    if (!activeStates.includes(wf.state)) return;
+
+    // Auto-respond to permission prompts and agent questions
+    if (
+      activity !== ACTIVITY_STATE.WAITING_FOR_APPROVAL &&
+      activity !== ACTIVITY_STATE.WAITING_FOR_INPUT
+    ) {
+      return;
+    }
+
+    // Small delay to let the full prompt render before responding
+    setTimeout(() => {
+      const session = this.#sessionManager.getSession(sessionId);
+      if (!session || session.state !== 'running') return;
+
+      // Check the session is still in a waiting state
+      if (
+        session.activity !== ACTIVITY_STATE.WAITING_FOR_APPROVAL &&
+        session.activity !== ACTIVITY_STATE.WAITING_FOR_INPUT
+      ) {
+        return;
+      }
+
+      // Send "yes" + Enter to approve and continue
+      try {
+        session.pty.write('yes\n');
+        console.log(
+          `[workflow ${wf.id.slice(0, 8)}] Auto-responded "yes" to ${activity} prompt in session ${sessionId.slice(0, 8)}`,
+        );
+      } catch (err) {
+        console.error(
+          `[workflow ${wf.id.slice(0, 8)}] Failed to auto-respond:`,
+          err.message,
+        );
+      }
+    }, 1500); // 1.5s delay to let the prompt fully render
+  }
+
+  /**
+   * Find the workflow that owns a given session.
+   */
+  #findWorkflowBySession(sessionId) {
+    for (const wf of this.#workflows.values()) {
+      if (wf.currentSessionId === sessionId) return wf;
+    }
+    return null;
   }
 
   // ------------------------------------------------------------------
