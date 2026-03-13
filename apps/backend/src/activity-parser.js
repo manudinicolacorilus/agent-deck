@@ -22,6 +22,21 @@ const PATTERNS = [
     /\bto run\b.*\bto deny\b/i,
     /\bto run\b.*\bto skip\b/i,
   ]},
+  // Agent is asking a question / waiting for user input (not a permission prompt)
+  { state: ACTIVITY_STATE.WAITING_FOR_INPUT, patterns: [
+    /\bWould you like\b/i,
+    /\bShall I\b/i,
+    /\bDo you want me to\b/i,
+    /\bReady to\b.*\?/i,
+    /\bShould I\b/i,
+    /\bWant me to\b/i,
+    /\bProceed\?/i,
+    /\bContinue\?/i,
+    /\bGo ahead\?/i,
+    /\bstart\b.*\bplan\b/i,
+    /\bimplement\b.*\bplan\b/i,
+    /\bbegin\b.*\bimplementation\b/i,
+  ]},
   // Reading files — patterns should be specific to avoid false positives from CLI echoes
   { state: ACTIVITY_STATE.READING, patterns: [
     /\bRead(?:ing)?\s+(?:file|from|the|src|\.)/i,
@@ -133,7 +148,8 @@ export default class ActivityParser {
         this.#currentState !== ACTIVITY_STATE.IDLE &&
         this.#currentState !== ACTIVITY_STATE.DONE &&
         this.#currentState !== ACTIVITY_STATE.ERROR &&
-        this.#currentState !== ACTIVITY_STATE.WAITING_FOR_APPROVAL
+        this.#currentState !== ACTIVITY_STATE.WAITING_FOR_APPROVAL &&
+        this.#currentState !== ACTIVITY_STATE.WAITING_FOR_INPUT
       ) {
         this.#currentState = ACTIVITY_STATE.IDLE;
         this.#onChange?.(ACTIVITY_STATE.IDLE);

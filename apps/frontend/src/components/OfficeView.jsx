@@ -280,16 +280,16 @@ function DeskCubicle({ agent, session, activity, onClick }) {
   const ACTIVITY_COLORS = {
     idle: '#484f58', thinking: '#d2a8ff', reading: '#58a6ff',
     editing: '#3fb950', running_command: '#f0883e',
-    waiting_for_approval: '#f8e3a1', done: '#3fb950', error: '#da3633',
+    waiting_for_approval: '#f8e3a1', waiting_for_input: '#f8e3a1', done: '#3fb950', error: '#da3633',
   };
   const ACTIVITY_SCREEN = {
     idle: '...', thinking: '?  ?', reading: '≡ ≡', editing: '///',
-    running_command: '> _', waiting_for_approval: 'Y/n', done: '✓ ✓', error: 'ERR',
+    running_command: '> _', waiting_for_approval: 'Y/n', waiting_for_input: '?  ?', done: '✓ ✓', error: 'ERR',
   };
   const ACTIVITY_LABEL = {
     idle: 'Idle', thinking: 'Thinking...', reading: 'Reading',
     editing: 'Coding', running_command: 'Running', waiting_for_approval: 'Needs OK',
-    done: 'Done!', error: 'Error',
+    waiting_for_input: 'Asking...', done: 'Done!', error: 'Error',
   };
 
   const color = ACTIVITY_COLORS[activity] || ACTIVITY_COLORS.idle;
@@ -327,6 +327,7 @@ function DeskCubicle({ agent, session, activity, onClick }) {
          activity === 'reading' ? '📖' :
          activity === 'running_command' ? '⚡' :
          activity === 'waiting_for_approval' ? '✋' :
+         activity === 'waiting_for_input' ? '💬' :
          activity === 'done' ? '✅' :
          activity === 'error' ? '❌' : '🧑‍💻'}
       </div>

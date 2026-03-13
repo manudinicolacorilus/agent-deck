@@ -28,6 +28,7 @@ export const ACTIVITY_STATE = {
   EDITING: 'editing',
   RUNNING_COMMAND: 'running_command',
   WAITING_FOR_APPROVAL: 'waiting_for_approval',
+  WAITING_FOR_INPUT: 'waiting_for_input',
   DONE: 'done',
   ERROR: 'error',
 };
