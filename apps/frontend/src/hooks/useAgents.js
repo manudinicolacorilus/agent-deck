@@ -38,7 +38,7 @@ export default function useAgents() {
       }
     })();
 
-    intervalRef.current = setInterval(refresh, 5000);
+    intervalRef.current = setInterval(refresh, 2000);
 
     return () => {
       controller.abort();

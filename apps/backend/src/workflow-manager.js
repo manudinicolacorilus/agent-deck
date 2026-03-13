@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { execSync } from 'node:child_process';
 import { v4 as uuidv4 } from 'uuid';
 import { WORKFLOW_STATE, AGENT_ROLE, REVIEW_MODELS, ACTIVITY_STATE } from '@agent-deck/shared';
 
@@ -215,6 +216,11 @@ export default class WorkflowManager extends EventEmitter {
       }
       console.log(`[workflow ${wf.id.slice(0, 8)}] Waiting for an idle dev agent...`);
       return;
+    }
+
+    // Create a feature branch before the dev starts working (first time only)
+    if (!wf.branch) {
+      wf.branch = this.#ensureWorkflowBranch(wf);
     }
 
     // Build dev prompt based on whether this is first implementation or revision
@@ -573,6 +579,7 @@ export default class WorkflowManager extends EventEmitter {
       id: wf.id,
       prompt: wf.prompt,
       workDir: wf.workDir,
+      branch: wf.branch || null,
       state: wf.state,
       reviewCycle: wf.reviewCycle,
       steps: wf.steps.map(({ output, ...step }) => ({
@@ -583,6 +590,49 @@ export default class WorkflowManager extends EventEmitter {
       createdAt: wf.createdAt,
       updatedAt: wf.updatedAt,
     };
+  }
+
+  /**
+   * Create a git branch for the workflow so dev work doesn't happen on main.
+   * @param {object} wf
+   * @returns {string} branch name
+   */
+  #ensureWorkflowBranch(wf) {
+    const slug = wf.prompt
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40);
+    const branchName = `workflow/${slug}-${wf.id.slice(0, 8)}`;
+
+    try {
+      execSync(`git checkout -b "${branchName}"`, {
+        cwd: wf.workDir,
+        stdio: 'pipe',
+        timeout: 10000,
+      });
+      console.log(`[workflow ${wf.id.slice(0, 8)}] Created branch: ${branchName}`);
+      wf.steps.push({
+        role: 'system',
+        action: 'branch_created',
+        message: `Created branch: ${branchName}`,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      // Branch may already exist or git not available — log and continue
+      console.warn(`[workflow ${wf.id.slice(0, 8)}] Branch creation warning: ${err.message}`);
+      try {
+        execSync(`git checkout "${branchName}"`, {
+          cwd: wf.workDir,
+          stdio: 'pipe',
+          timeout: 10000,
+        });
+      } catch {
+        // Ignore — dev will work on whatever branch is current
+      }
+    }
+
+    return branchName;
   }
 
   #emitUpdate(wf) {

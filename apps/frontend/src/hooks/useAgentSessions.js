@@ -39,8 +39,8 @@ export default function useAgentSessions() {
       }
     })();
 
-    // Poll every 5 seconds
-    intervalRef.current = setInterval(refresh, 5000);
+    // Poll every 2 seconds for responsive desk transitions
+    intervalRef.current = setInterval(refresh, 2000);
 
     return () => {
       controller.abort();

@@ -19,6 +19,16 @@ export default function useAgentVisualStates(agents, sessions) {
 
   useEffect(() => {
     const isFirstRun = prevSessionMap.current === null;
+    // Snapshot the previous map BEFORE we update it, so the callback
+    // compares against the real previous state (not the just-updated one).
+    const prevMap = prevSessionMap.current;
+
+    // Build the new map for this cycle (will become "previous" next time)
+    const newMap = {};
+    for (const agent of agents) {
+      const sid = agent.currentSessionId || null;
+      newMap[agent.id] = sid && activeSessionIds.has(sid) ? sid : null;
+    }
 
     setVisualStates((prev) => {
       const next = { ...prev };
@@ -36,7 +46,7 @@ export default function useAgentVisualStates(agents, sessions) {
             ? AGENT_VISUAL_STATE.WORKING_AT_DESK
             : AGENT_VISUAL_STATE.IDLE_AT_COFFEE;
         } else {
-          const prevSessionId = prevSessionMap.current[agent.id];
+          const prevSessionId = prevMap[agent.id];
           const prevHadSession = prevSessionId !== undefined
             ? !!prevSessionId
             : false;
@@ -85,12 +95,7 @@ export default function useAgentVisualStates(agents, sessions) {
       return next;
     });
 
-    // Update prev map — only track sessions that are actually running
-    const newMap = {};
-    for (const agent of agents) {
-      const sid = agent.currentSessionId || null;
-      newMap[agent.id] = sid && activeSessionIds.has(sid) ? sid : null;
-    }
+    // Update prev map AFTER snapshotting it above
     prevSessionMap.current = newMap;
   }, [agents, sessions]);
 
