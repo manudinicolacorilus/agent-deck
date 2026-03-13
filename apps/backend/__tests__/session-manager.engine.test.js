@@ -52,12 +52,13 @@ describe('SessionManager — engine support', () => {
     const [shell, args] = pty.spawn.mock.calls[0];
     expect(shell).toBe('powershell.exe');
     const cmd = args.join(' ');
-    expect(cmd).toContain('gh copilot agent');
-    expect(cmd).not.toContain('--yolo');
+    expect(cmd).toContain('copilot');
+    expect(cmd).toContain('-p');
+    expect(cmd).not.toContain('--allow-all-tools');
   });
 
   // ------------------------------------------------------------------
-  it('create() with engine "copilot" and yolo=true includes --yolo flag', () => {
+  it('create() with engine "copilot" and yolo=true includes --allow-all-tools flag', () => {
     manager.createSession({
       workDir: 'C:\\test',
       prompt: 'fix bug',
@@ -67,7 +68,7 @@ describe('SessionManager — engine support', () => {
 
     const args = pty.spawn.mock.calls[0][1];
     const cmd = args.join(' ');
-    expect(cmd).toContain('--yolo');
+    expect(cmd).toContain('--allow-all-tools');
   });
 
   // ------------------------------------------------------------------

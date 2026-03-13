@@ -90,11 +90,13 @@ export default class SessionManager extends EventEmitter {
       activityParser,
       ringBuffer: [],
       ringBufferBytes: 0,
+      lastDataAt: Date.now(),
     };
 
     // Stream PTY output into the ring buffer and emit events.
     ptyProcess.onData((data) => {
       this.#pushToRingBuffer(session, data);
+      session.lastDataAt = Date.now();
       activityParser.feed(data);
       this.emit('data', { sessionId: id, data });
     });
@@ -197,6 +199,33 @@ export default class SessionManager extends EventEmitter {
     const session = this.#sessions.get(id);
     if (!session) return '';
     return session.ringBuffer.join('');
+  }
+
+  /**
+   * Wait for a session's PTY output to drain after exit.
+   * Resolves once no new data has arrived for `quietMs`, or after `maxMs`.
+   * @param {string} id
+   * @param {{ quietMs?: number, maxMs?: number }} [opts]
+   * @returns {Promise<void>}
+   */
+  waitForDrain(id, { quietMs = 300, maxMs = 3000 } = {}) {
+    const session = this.#sessions.get(id);
+    if (!session) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      const start = Date.now();
+      const check = () => {
+        const elapsed = Date.now() - start;
+        const sinceLastData = Date.now() - (session.lastDataAt || 0);
+        if (sinceLastData >= quietMs || elapsed >= maxMs) {
+          resolve();
+        } else {
+          setTimeout(check, 50);
+        }
+      };
+      // Start checking after a small initial delay
+      setTimeout(check, 100);
+    });
   }
 
   /**

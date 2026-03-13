@@ -150,25 +150,26 @@ export default class WorkflowManager extends EventEmitter {
       return;
     }
 
-    // Architect always plans first
+    // Architect always plans first — must NOT use plan mode or start implementing
     const architectPrompt = [
-      `You are the ARCHITECT for this task. You MUST use plan mode.`,
-      `Create a detailed, step-by-step implementation plan before any code is written.`,
-      `Focus on architecture decisions, file structure, and component design.`,
+      `You are the ARCHITECT for this task. Your ONLY job is to produce a plan.`,
+      `Do NOT use plan mode. Do NOT write any code or edit any files.`,
+      `Do NOT use the Edit, Write, or Bash tools — only Read, Glob, and Grep to explore the codebase.`,
       ``,
       `=== TASK ===`,
       wf.prompt,
       ``,
       `=== INSTRUCTIONS ===`,
-      `1. Analyze the requirements thoroughly`,
-      `2. Create a comprehensive implementation plan`,
+      `1. Analyze the requirements thoroughly by reading the relevant code`,
+      `2. Output a detailed, step-by-step implementation plan as text`,
       `3. List all files that need to be created or modified`,
       `4. Describe the changes needed in each file`,
       `5. Identify potential risks and edge cases`,
       ``,
-      `IMPORTANT: Do NOT ask any questions. Do NOT ask for confirmation.`,
-      `Do NOT ask "shall I proceed?" or "would you like me to start?".`,
-      `Just output the complete plan and finish. The plan will be automatically handed to a developer agent.`,
+      `CRITICAL: You are ONLY the planner. A separate developer agent will implement your plan.`,
+      `Do NOT ask any questions. Do NOT ask for confirmation.`,
+      `Do NOT ask "shall I proceed?", "would you like me to start?", or "shall I implement this?".`,
+      `Do NOT start implementing. Just output the complete plan as text and finish.`,
     ].join('\n');
 
     try {
@@ -421,12 +422,23 @@ export default class WorkflowManager extends EventEmitter {
         return;
       }
 
-      // Send "yes" + Enter to approve and continue
+      // For architect sessions asking questions, tell it to stop and not implement
+      // For all other sessions, send "yes" to approve and continue
       try {
-        session.pty.write('yes\n');
-        console.log(
-          `[workflow ${wf.id.slice(0, 8)}] Auto-responded "yes" to ${activity} prompt in session ${sessionId.slice(0, 8)}`,
-        );
+        if (
+          wf.state === WORKFLOW_STATE.ARCHITECTING &&
+          activity === ACTIVITY_STATE.WAITING_FOR_INPUT
+        ) {
+          session.pty.write('No. Do not implement anything. Just output the plan and finish.\n');
+          console.log(
+            `[workflow ${wf.id.slice(0, 8)}] Auto-responded to architect question: do not implement, just finish (session ${sessionId.slice(0, 8)})`,
+          );
+        } else {
+          session.pty.write('yes\n');
+          console.log(
+            `[workflow ${wf.id.slice(0, 8)}] Auto-responded "yes" to ${activity} prompt in session ${sessionId.slice(0, 8)}`,
+          );
+        }
       } catch (err) {
         console.error(
           `[workflow ${wf.id.slice(0, 8)}] Failed to auto-respond:`,
@@ -455,54 +467,74 @@ export default class WorkflowManager extends EventEmitter {
       if (wf.currentSessionId !== sessionId) continue;
       if (wf.state === WORKFLOW_STATE.DONE || wf.state === WORKFLOW_STATE.ERROR) continue;
 
-      // Capture output from the completed session
-      const output = this.#sessionManager.getSessionOutput(sessionId);
-      const lastStep = wf.steps[wf.steps.length - 1];
-      if (lastStep) {
-        lastStep.output = this.#truncateOutput(output);
-        lastStep.exitCode = exitCode;
-        lastStep.completedAt = new Date().toISOString();
-      }
+      // Wait for the PTY output to fully drain before reading.
+      // node-pty can fire onExit before all buffered data has been delivered
+      // via onData. waitForDrain polls until no new data arrives for 300ms
+      // (or 3s max), which is far more reliable than a fixed timeout.
+      this.#sessionManager
+        .waitForDrain(sessionId)
+        .then(() => this.#finalizeSessionExit(wf, sessionId, exitCode));
+      return;
+    }
+  }
 
-      if (exitCode !== 0) {
-        console.log(`[workflow ${wf.id.slice(0, 8)}] Session exited with code ${exitCode}, marking error`);
-        wf.state = WORKFLOW_STATE.ERROR;
-        wf.error = `Session exited with code ${exitCode}`;
+  #finalizeSessionExit(wf, sessionId, exitCode) {
+    // Capture output from the completed session (now with buffer flushed)
+    const output = this.#sessionManager.getSessionOutput(sessionId);
+    const lastStep = wf.steps[wf.steps.length - 1];
+    if (lastStep) {
+      lastStep.output = this.#truncateOutput(output);
+      lastStep.exitCode = exitCode;
+      lastStep.completedAt = new Date().toISOString();
+    }
+
+    if (exitCode !== 0) {
+      console.log(`[workflow ${wf.id.slice(0, 8)}] Session exited with code ${exitCode}, marking error`);
+      wf.state = WORKFLOW_STATE.ERROR;
+      wf.error = `Session exited with code ${exitCode}`;
+      wf.updatedAt = new Date().toISOString();
+      this.#emitUpdate(wf);
+      return;
+    }
+
+    // Advance based on current state
+    switch (wf.state) {
+      case WORKFLOW_STATE.ARCHITECTING: {
+        // Architect done → assign dev
+        const planOutput = this.#getLastStepOutput(wf, AGENT_ROLE.ARCHITECT);
+        const planLen = planOutput.length;
+        if (planLen < 50 || planOutput === '(no output captured)') {
+          console.warn(
+            `[workflow ${wf.id.slice(0, 8)}] WARNING: Architect plan output looks empty or too short (${planLen} chars). ` +
+            `Dev agent may not have enough context.`,
+          );
+        } else {
+          console.log(`[workflow ${wf.id.slice(0, 8)}] Architect finished (plan: ${planLen} chars), advancing to dev`);
+        }
+        wf.state = WORKFLOW_STATE.WAITING_DEV;
         wf.updatedAt = new Date().toISOString();
         this.#emitUpdate(wf);
-        return;
+        this.#assignDev(wf);
+        break;
       }
 
-      // Advance based on current state
-      switch (wf.state) {
-        case WORKFLOW_STATE.ARCHITECTING:
-          // Architect done → assign dev
-          console.log(`[workflow ${wf.id.slice(0, 8)}] Architect finished, advancing to dev`);
-          wf.state = WORKFLOW_STATE.WAITING_DEV;
-          wf.updatedAt = new Date().toISOString();
-          this.#emitUpdate(wf);
-          this.#assignDev(wf);
-          break;
+      case WORKFLOW_STATE.DEVELOPING:
+      case WORKFLOW_STATE.REVISING:
+        // Dev done → assign reviewer
+        console.log(`[workflow ${wf.id.slice(0, 8)}] Dev finished, advancing to review`);
+        wf.state = WORKFLOW_STATE.WAITING_REVIEW;
+        wf.updatedAt = new Date().toISOString();
+        this.#emitUpdate(wf);
+        this.#assignReviewers(wf);
+        break;
 
-        case WORKFLOW_STATE.DEVELOPING:
-        case WORKFLOW_STATE.REVISING:
-          // Dev done → assign reviewer
-          console.log(`[workflow ${wf.id.slice(0, 8)}] Dev finished, advancing to review`);
-          wf.state = WORKFLOW_STATE.WAITING_REVIEW;
-          wf.updatedAt = new Date().toISOString();
-          this.#emitUpdate(wf);
-          this.#assignReviewers(wf);
-          break;
+      case WORKFLOW_STATE.REVIEWING:
+        // Review done → check verdict
+        this.#handleReviewComplete(wf, output);
+        break;
 
-        case WORKFLOW_STATE.REVIEWING:
-          // Review done → check verdict
-          this.#handleReviewComplete(wf, output);
-          break;
-
-        default:
-          break;
-      }
-      return;
+      default:
+        break;
     }
   }
 
