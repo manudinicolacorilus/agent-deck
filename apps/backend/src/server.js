@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import config from './config.js';
 import SessionManager from './session-manager.js';
+import AgentStore from './agent-store.js';
+import WorkflowManager from './workflow-manager.js';
 import setupWebSocket from './ws-handler.js';
 import { listDirectories, getDriveRoots } from './browse-handler.js';
 import { API } from '@agent-deck/shared';
@@ -18,9 +20,11 @@ export function createSessionManager() {
  * Build and return the Express application.
  *
  * @param {SessionManager} sessionManager
+ * @param {AgentStore} agentStore
+ * @param {WorkflowManager} workflowManager
  * @returns {express.Express}
  */
-function buildApp(sessionManager) {
+function buildApp(sessionManager, agentStore, workflowManager) {
   const app = express();
 
   app.use(cors({ origin: config.CORS_ORIGINS }));
@@ -111,6 +115,97 @@ function buildApp(sessionManager) {
     res.json({ engines });
   });
 
+  // --- Persistent Agents ------------------------------------------------
+  app.get(API.AGENTS, (_req, res) => {
+    res.json(agentStore.getAll());
+  });
+
+  app.post(API.AGENTS, (req, res) => {
+    const { name, engine, yolo, role } = req.body;
+    if (!name || !engine) {
+      return res.status(400).json({ error: 'name and engine are required' });
+    }
+    try {
+      const agent = agentStore.create({ name, engine, yolo, role });
+      res.status(201).json(agent);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/agents/:id', (req, res) => {
+    const agent = agentStore.update(req.params.id, req.body);
+    if (!agent) return res.status(404).json({ error: 'Agent not found' });
+    res.json(agent);
+  });
+
+  app.delete('/api/agents/:id', (req, res) => {
+    try {
+      const deleted = agentStore.delete(req.params.id);
+      if (!deleted) return res.status(404).json({ error: 'Agent not found' });
+      res.json({ deleted: true });
+    } catch (err) {
+      res.status(409).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/agents/:id/assign', (req, res) => {
+    const agent = agentStore.get(req.params.id);
+    if (!agent) return res.status(404).json({ error: 'Agent not found' });
+    if (agent.currentSessionId) {
+      return res.status(409).json({ error: 'Agent already has an active session' });
+    }
+
+    const { prompt, workDir } = req.body;
+    if (!prompt) return res.status(400).json({ error: 'prompt is required' });
+    if (!workDir) return res.status(400).json({ error: 'workDir is required' });
+
+    try {
+      const session = sessionManager.createSession({
+        workDir,
+        prompt,
+        label: agent.name,
+        engine: agent.engine,
+        options: { yolo: agent.yolo },
+        agentId: agent.id,
+      });
+      agentStore.setCurrentSession(agent.id, session.id);
+      res.status(201).json({ agent: agentStore.get(agent.id), session });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // --- Workflows --------------------------------------------------------
+  app.get(API.WORKFLOWS, (_req, res) => {
+    res.json(workflowManager.getAll());
+  });
+
+  app.post(API.WORKFLOWS, (req, res) => {
+    const { prompt, workDir } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: 'prompt is required' });
+    }
+    try {
+      const workflow = workflowManager.start({ prompt, workDir: workDir || '.' });
+      res.status(201).json(workflow);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/workflows/:id', (req, res) => {
+    const wf = workflowManager.get(req.params.id);
+    if (!wf) return res.status(404).json({ error: 'Workflow not found' });
+    res.json(wf);
+  });
+
+  app.delete('/api/workflows/:id', (req, res) => {
+    const cancelled = workflowManager.cancel(req.params.id);
+    if (!cancelled) return res.status(404).json({ error: 'Workflow not found' });
+    res.json({ cancelled: true });
+  });
+
   return app;
 }
 
@@ -120,17 +215,29 @@ function buildApp(sessionManager) {
  * @param {SessionManager} [sessionManager]  Optional — a new one is created if omitted.
  * @returns {Promise<{ server: http.Server, sessionManager: SessionManager, app: express.Express }>}
  */
-export function startServer(sessionManager) {
+export function startServer(sessionManager, agentStore) {
   sessionManager = sessionManager || createSessionManager();
-  const app = buildApp(sessionManager);
+  agentStore = agentStore || new AgentStore();
+  const workflowManager = new WorkflowManager(sessionManager, agentStore);
+  const app = buildApp(sessionManager, agentStore, workflowManager);
   const server = http.createServer(app);
+
+  // When a session exits, clear the agent's currentSessionId
+  sessionManager.on('exit', ({ sessionId }) => {
+    for (const agent of agentStore.getAll()) {
+      if (agent.currentSessionId === sessionId) {
+        agentStore.clearCurrentSession(agent.id);
+        break;
+      }
+    }
+  });
 
   setupWebSocket(server, sessionManager);
 
   return new Promise((resolve) => {
     server.listen(config.PORT, () => {
       console.log(`Backend listening on http://localhost:${config.PORT}`);
-      resolve({ server, sessionManager, app });
+      resolve({ server, sessionManager, agentStore, workflowManager, app });
     });
   });
 }

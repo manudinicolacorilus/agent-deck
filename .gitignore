@@ -140,3 +140,6 @@ Thumbs.db
 
 # Vite cache
 .vite/
+
+# Agent Deck persistent data
+apps/backend/data/agents.json

@@ -44,6 +44,14 @@ const ACTIVITY_CONFIG = {
     statusColor: '#f0883e',
     glowColor: '#f0883e33',
   },
+  waiting_for_approval: {
+    screenContent: '? Y/n',
+    screenColor: '#f8e3a1',
+    character: '\u{270B}',
+    statusText: 'Needs approval',
+    statusColor: '#f8e3a1',
+    glowColor: '#f8e3a133',
+  },
   done: {
     screenContent: '\u2713 \u2713 \u2713',
     screenColor: '#3fb950',
@@ -158,7 +166,7 @@ function ScreenPulse({ color }) {
   );
 }
 
-export default function AgentDesk({ session, activity, onClick }) {
+export default function AgentDesk({ session, agent, activity, onClick }) {
   const [hover, setHover] = useState(false);
   const config = ACTIVITY_CONFIG[activity] || ACTIVITY_CONFIG.idle;
   const isActive = activity !== 'idle' && activity !== 'done' && activity !== 'error';
@@ -177,7 +185,7 @@ export default function AgentDesk({ session, activity, onClick }) {
       onMouseLeave={() => setHover(false)}
       role="button"
       tabIndex={0}
-      title={`${session.label} — ${config.statusText}`}
+      title={`${agent?.name || session.label} — ${config.statusText}`}
     >
       {/* Monitor */}
       <div style={{ ...styles.monitor, borderColor: config.screenColor + '66' }}>
@@ -194,7 +202,14 @@ export default function AgentDesk({ session, activity, onClick }) {
       <div style={styles.character}>{config.character}</div>
 
       {/* Agent name */}
-      <div style={styles.label}>{session.label || session.id.slice(0, 8)}</div>
+      <div style={styles.label}>{agent?.name || session.label || session.id.slice(0, 8)}</div>
+
+      {/* Engine badge */}
+      {agent && (
+        <div style={{ fontSize: 10, color: '#8b949e', marginBottom: 4 }}>
+          {agent.engine}
+        </div>
+      )}
 
       {/* Status */}
       <div style={{ ...styles.status, color: config.statusColor }}>

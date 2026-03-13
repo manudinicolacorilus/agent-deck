@@ -31,7 +31,7 @@ export default class SessionManager extends EventEmitter {
    * @param {boolean} [opts.options.yolo] Whether to run in yolo mode
    * @returns {object} Serialised session (without pty)
    */
-  createSession({ workDir, prompt, label, engine, options = {} }) {
+  createSession({ workDir, prompt, label, engine, options = {}, agentId = null }) {
     if (this.#sessions.size >= config.MAX_SESSIONS) {
       throw new Error(
         `Session limit reached (${config.MAX_SESSIONS}). Kill an existing session first.`,
@@ -82,6 +82,7 @@ export default class SessionManager extends EventEmitter {
       prompt: prompt || '',
       engine,
       yolo,
+      agentId,
       state: SESSION_STATE.RUNNING,
       activity: ACTIVITY_STATE.IDLE,
       createdAt: new Date().toISOString(),

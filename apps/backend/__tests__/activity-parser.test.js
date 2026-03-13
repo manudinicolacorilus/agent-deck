@@ -76,6 +76,45 @@ describe('ActivityParser', () => {
     expect(onChange).toHaveBeenCalledWith('editing');
   });
 
+  it('detects waiting_for_approval when Claude asks for permission', () => {
+    parser.feed('Allow Read tool? Y/n');
+    vi.advanceTimersByTime(400);
+    expect(onChange).toHaveBeenCalledWith('waiting_for_approval');
+  });
+
+  it('detects waiting_for_approval from run/deny prompt', () => {
+    parser.feed('⏎ to run, x to deny');
+    vi.advanceTimersByTime(400);
+    expect(onChange).toHaveBeenCalledWith('waiting_for_approval');
+  });
+
+  it('transitions to idle after inactivity timeout', () => {
+    parser.feed('Reading file src/index.js');
+    vi.advanceTimersByTime(400);
+    expect(onChange).toHaveBeenCalledWith('reading');
+
+    // No new data for 8 seconds
+    vi.advanceTimersByTime(8_000);
+    expect(onChange).toHaveBeenCalledWith('idle');
+  });
+
+  it('does not idle-timeout from waiting_for_approval', () => {
+    parser.feed('Allow Read tool? Y/n');
+    vi.advanceTimersByTime(400);
+    expect(onChange).toHaveBeenCalledWith('waiting_for_approval');
+
+    // Even after 8s, should stay waiting
+    vi.advanceTimersByTime(8_000);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not idle-timeout from done state', () => {
+    parser.markDone(0);
+    vi.advanceTimersByTime(8_000);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('done');
+  });
+
   it('dispose stops emitting', () => {
     parser.dispose();
     parser.feed('Thinking...');

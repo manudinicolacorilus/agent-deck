@@ -4,9 +4,16 @@ import AgentGrid from './components/AgentGrid';
 import OfficeView from './components/OfficeView';
 import BottomBar from './components/BottomBar';
 import NewAgentModal from './components/NewAgentModal';
+import CreateAgentModal from './components/CreateAgentModal';
+import AssignPromptModal from './components/AssignPromptModal';
+import StartWorkflowModal from './components/StartWorkflowModal';
 import useAgentSessions from './hooks/useAgentSessions';
+import useAgents from './hooks/useAgents';
 import useBackendHealth from './hooks/useBackendHealth';
 import useActivityTracker from './hooks/useActivityTracker';
+import useAgentVisualStates from './hooks/useAgentVisualStates';
+import useSoundEffects from './hooks/useSoundEffects';
+import useWorkflows from './hooks/useWorkflows';
 
 const styles = {
   layout: {
@@ -25,15 +32,40 @@ const styles = {
 
 export default function App() {
   const { sessions, loading, error, createSession, killSession, closeSession } = useAgentSessions();
+  const { agents, createAgent, deleteAgent, assignPrompt } = useAgents();
   const health = useBackendHealth();
   const activities = useActivityTracker(sessions);
-  const [modalOpen, setModalOpen] = useState(false);
+  const visualStates = useAgentVisualStates(agents, sessions);
+  const { soundEnabled, toggleSound } = useSoundEffects(activities, visualStates, agents, sessions);
+  const { workflows, startWorkflow, cancelWorkflow } = useWorkflows();
+
+  const [sessionModalOpen, setSessionModalOpen] = useState(false);
+  const [createAgentModalOpen, setCreateAgentModalOpen] = useState(false);
+  const [workflowModalOpen, setWorkflowModalOpen] = useState(false);
+  const [assignAgent, setAssignAgent] = useState(null);
   const [view, setView] = useState('terminal');
 
-  const handleCreate = useCallback(async (formData) => {
+  // Legacy quick session flow
+  const handleCreateSession = useCallback(async (formData) => {
     await createSession(formData);
-    setModalOpen(false);
+    setSessionModalOpen(false);
   }, [createSession]);
+
+  // Persistent agent flow
+  const handleCreateAgent = useCallback(async (formData) => {
+    await createAgent(formData);
+    setCreateAgentModalOpen(false);
+  }, [createAgent]);
+
+  const handleAssignPrompt = useCallback(async (agentId, { prompt, workDir }) => {
+    await assignPrompt(agentId, { prompt, workDir });
+    setAssignAgent(null);
+  }, [assignPrompt]);
+
+  const handleStartWorkflow = useCallback(async (data) => {
+    await startWorkflow(data);
+    setWorkflowModalOpen(false);
+  }, [startWorkflow]);
 
   const handleKill = useCallback(async (id) => {
     await killSession(id);
@@ -43,34 +75,69 @@ export default function App() {
     await closeSession(id);
   }, [closeSession]);
 
-  const handleSelectAgent = useCallback((id) => {
-    // Switch to terminal view when clicking an agent in office view
+  const handleSelectAgent = useCallback((sessionId) => {
+    setView('terminal');
+  }, []);
+
+  const handleClickIdleAgent = useCallback((agent) => {
+    setAssignAgent(agent);
+  }, []);
+
+  const handleClickWorkingAgent = useCallback((agent) => {
     setView('terminal');
   }, []);
 
   return (
     <div style={styles.layout}>
       <Header
-        onNewAgent={() => setModalOpen(true)}
+        onNewAgent={() => setCreateAgentModalOpen(true)}
+        onNewSession={() => setSessionModalOpen(true)}
+        onStartWorkflow={() => setWorkflowModalOpen(true)}
         view={view}
         onViewChange={setView}
+        soundEnabled={soundEnabled}
+        onToggleSound={toggleSound}
       />
       <div style={styles.main}>
         {view === 'terminal' ? (
           <AgentGrid sessions={sessions} onKill={handleKill} onClose={handleClose} />
         ) : (
           <OfficeView
+            agents={agents}
             sessions={sessions}
             activities={activities}
-            onSelectAgent={handleSelectAgent}
+            visualStates={visualStates}
+            workflows={workflows}
+            onClickIdleAgent={handleClickIdleAgent}
+            onClickWorkingAgent={handleClickWorkingAgent}
+            onDeleteAgent={deleteAgent}
+            onCancelWorkflow={cancelWorkflow}
           />
         )}
       </div>
       <BottomBar health={health.connected} sessionCount={sessions.length} />
+
       <NewAgentModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleCreate}
+        isOpen={sessionModalOpen}
+        onClose={() => setSessionModalOpen(false)}
+        onSubmit={handleCreateSession}
+      />
+      <CreateAgentModal
+        isOpen={createAgentModalOpen}
+        onClose={() => setCreateAgentModalOpen(false)}
+        onSubmit={handleCreateAgent}
+      />
+      <AssignPromptModal
+        isOpen={!!assignAgent}
+        agent={assignAgent}
+        onClose={() => setAssignAgent(null)}
+        onSubmit={handleAssignPrompt}
+      />
+      <StartWorkflowModal
+        isOpen={workflowModalOpen}
+        onClose={() => setWorkflowModalOpen(false)}
+        onSubmit={handleStartWorkflow}
+        agents={agents}
       />
     </div>
   );

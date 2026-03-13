@@ -43,7 +43,6 @@ const styles = {
     alignItems: 'center',
     gap: 6,
     padding: '6px 16px',
-    background: '#238636',
     color: '#fff',
     border: '1px solid rgba(240, 246, 252, 0.1)',
     borderRadius: 6,
@@ -72,8 +71,10 @@ const styles = {
   },
 };
 
-export default function Header({ onNewAgent, view, onViewChange }) {
-  const [hover, setHover] = React.useState(false);
+export default function Header({ onNewAgent, onNewSession, onStartWorkflow, view, onViewChange, soundEnabled, onToggleSound }) {
+  const [hoverAgent, setHoverAgent] = React.useState(false);
+  const [hoverSession, setHoverSession] = React.useState(false);
+  const [hoverWorkflow, setHoverWorkflow] = React.useState(false);
 
   return (
     <header style={styles.header}>
@@ -82,6 +83,23 @@ export default function Header({ onNewAgent, view, onViewChange }) {
         <span style={styles.title}>Agent Deck</span>
       </div>
       <div style={styles.controls}>
+        <button
+          style={{
+            ...styles.viewBtn,
+            background: soundEnabled ? '#21262d' : '#21262d',
+            color: soundEnabled ? '#e6edf3' : '#484f58',
+            border: `1px solid ${soundEnabled ? '#30363d' : '#21262d'}`,
+            borderRadius: 6,
+            fontSize: 18,
+            padding: '4px 10px',
+            cursor: 'pointer',
+            lineHeight: '20px',
+          }}
+          onClick={onToggleSound}
+          title={soundEnabled ? 'Mute peon sounds' : 'Unmute peon sounds'}
+        >
+          {soundEnabled ? '\uD83D\uDD0A' : '\uD83D\uDD07'}
+        </button>
         <div style={styles.viewToggle}>
           <button
             style={{
@@ -107,13 +125,35 @@ export default function Header({ onNewAgent, view, onViewChange }) {
         <button
           style={{
             ...styles.button,
-            background: hover ? '#2ea043' : '#238636',
+            background: hoverWorkflow ? '#9a6ddf' : '#8957e5',
           }}
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
+          onMouseEnter={() => setHoverWorkflow(true)}
+          onMouseLeave={() => setHoverWorkflow(false)}
+          onClick={onStartWorkflow}
+        >
+          Workflow
+        </button>
+        <button
+          style={{
+            ...styles.button,
+            background: hoverAgent ? '#1c6dd0' : '#1158a6',
+          }}
+          onMouseEnter={() => setHoverAgent(true)}
+          onMouseLeave={() => setHoverAgent(false)}
           onClick={onNewAgent}
         >
           + New Agent
+        </button>
+        <button
+          style={{
+            ...styles.button,
+            background: hoverSession ? '#2ea043' : '#238636',
+          }}
+          onMouseEnter={() => setHoverSession(true)}
+          onMouseLeave={() => setHoverSession(false)}
+          onClick={onNewSession}
+        >
+          + Quick Session
         </button>
       </div>
     </header>

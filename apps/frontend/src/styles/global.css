@@ -66,3 +66,17 @@ code, pre, .mono {
   50% { width: 80%; }
   100% { width: 30%; }
 }
+
+@keyframes agentBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes coffeeStream {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+.coffee-steam {
+  animation: coffeeStream 2s ease-in-out infinite;
+}
