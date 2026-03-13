@@ -10,8 +10,22 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:3001',
-      '/ws': { target: 'ws://localhost:3001', ws: true },
+      '/api': {
+        target: 'http://localhost:3001',
+        configure: (proxy) => {
+          proxy.on('error', () => {});
+        },
+      },
+      '/ws': {
+        target: 'ws://localhost:3001',
+        ws: true,
+        configure: (proxy) => {
+          proxy.on('error', () => {});
+          proxy.on('proxyReqWs', (_proxyReq, _req, socket) => {
+            socket.on('error', () => {});
+          });
+        },
+      },
     },
   },
 });
