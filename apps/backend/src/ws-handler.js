@@ -1,5 +1,5 @@
 import { WebSocketServer } from 'ws';
-import { WS_MSG } from '@agent-deck/shared';
+import { WS_MSG, SESSION_STATE } from '@agent-deck/shared';
 import url from 'node:url';
 
 /**
@@ -105,15 +105,17 @@ export default function setupWebSocket(server, sessionManager) {
       const currentSession = sessionManager.getSession(sessionId);
       if (!currentSession) return;
 
+      const isAlive = currentSession.state === SESSION_STATE.RUNNING;
+
       switch (msg.type) {
         case WS_MSG.INPUT:
-          if (typeof msg.data === 'string') {
+          if (isAlive && typeof msg.data === 'string') {
             currentSession.pty.write(msg.data);
           }
           break;
 
         case WS_MSG.RESIZE:
-          if (typeof msg.cols === 'number' && typeof msg.rows === 'number') {
+          if (isAlive && typeof msg.cols === 'number' && typeof msg.rows === 'number') {
             currentSession.pty.resize(msg.cols, msg.rows);
           }
           break;
