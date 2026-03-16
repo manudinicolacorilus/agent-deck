@@ -331,9 +331,9 @@ export default class WorkflowManager extends EventEmitter {
     const modelsStr = REVIEW_MODELS.join(', ');
 
     const reviewPrompt = [
-      `/review the following code changes.`,
+      `You are a CODE REVIEWER. Review the following code changes.`,
       ``,
-      `You are a CODE REVIEWER. You MUST consult these 3 models for a thorough review: ${modelsStr}`,
+      `Use these 3 models for a thorough review: ${modelsStr}`,
       ``,
       `For each model, evaluate:`,
       `1. Code correctness and potential bugs`,
