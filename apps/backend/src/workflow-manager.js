@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { execSync } from 'node:child_process';
 import { v4 as uuidv4 } from 'uuid';
-import { WORKFLOW_STATE, AGENT_ROLE, REVIEW_MODELS, ACTIVITY_STATE } from '@agent-deck/shared';
+import { WORKFLOW_STATE, AGENT_ROLE, REVIEW_MODELS, ACTIVITY_STATE, SESSION_STATE } from '@agent-deck/shared';
 
 /**
  * Orchestrates multi-agent workflows: Architect → Dev → Review → (loop or done).
@@ -115,6 +115,13 @@ export default class WorkflowManager extends EventEmitter {
       clearInterval(this.#pollTimer);
       this.#pollTimer = null;
     }
+    // Clean up any pending auto-exit timers
+    for (const wf of this.#workflows.values()) {
+      if (wf._autoExitTimer) {
+        clearTimeout(wf._autoExitTimer);
+        wf._autoExitTimer = null;
+      }
+    }
   }
 
   // ------------------------------------------------------------------
@@ -173,6 +180,11 @@ export default class WorkflowManager extends EventEmitter {
     ].join('\n');
 
     try {
+      // Reset auto-exit tracking for the new session
+      wf._sessionActivated = false;
+      wf._sessionStartedAt = Date.now();
+      if (wf._autoExitTimer) { clearTimeout(wf._autoExitTimer); wf._autoExitTimer = null; }
+
       const session = this.#sessionManager.createSession({
         workDir: wf.workDir,
         prompt: architectPrompt,
@@ -263,6 +275,11 @@ export default class WorkflowManager extends EventEmitter {
     }
 
     try {
+      // Reset auto-exit tracking for the new session
+      wf._sessionActivated = false;
+      wf._sessionStartedAt = Date.now();
+      if (wf._autoExitTimer) { clearTimeout(wf._autoExitTimer); wf._autoExitTimer = null; }
+
       const session = this.#sessionManager.createSession({
         workDir: wf.workDir,
         prompt: devPrompt,
@@ -343,6 +360,11 @@ export default class WorkflowManager extends EventEmitter {
     ].join('\n');
 
     try {
+      // Reset auto-exit tracking for the new session
+      wf._sessionActivated = false;
+      wf._sessionStartedAt = Date.now();
+      if (wf._autoExitTimer) { clearTimeout(wf._autoExitTimer); wf._autoExitTimer = null; }
+
       // Reviewer always uses copilot engine
       const session = this.#sessionManager.createSession({
         workDir: wf.workDir,
@@ -386,66 +408,158 @@ export default class WorkflowManager extends EventEmitter {
   /**
    * When a workflow session is waiting for approval or asking a question,
    * automatically send input so the pipeline advances to the next agent.
+   *
+   * Also detects when a workflow agent has finished its work (session goes
+   * IDLE after being active) and sends /exit to terminate the session so
+   * the workflow can advance to the next step.
    */
   #onSessionActivity(sessionId, activity) {
     // Only act on workflow-owned sessions
     const wf = this.#findWorkflowBySession(sessionId);
     if (!wf) return;
 
-    // Only auto-respond for active workflow states (not DONE/ERROR)
-    const activeStates = [
+    // Only act for active workflow states (not DONE/ERROR)
+    const runningStates = [
       WORKFLOW_STATE.ARCHITECTING,
       WORKFLOW_STATE.DEVELOPING,
       WORKFLOW_STATE.REVISING,
       WORKFLOW_STATE.REVIEWING,
     ];
-    if (!activeStates.includes(wf.state)) return;
+    if (!runningStates.includes(wf.state)) return;
 
-    // Auto-respond to permission prompts and agent questions
-    if (
-      activity !== ACTIVITY_STATE.WAITING_FOR_APPROVAL &&
-      activity !== ACTIVITY_STATE.WAITING_FOR_INPUT
-    ) {
-      return;
+    // ---------------------------------------------------------------
+    // Track whether the session has done meaningful work. This lets us
+    // distinguish between the initial IDLE (session just started) and
+    // IDLE after the agent completed its task.
+    // ---------------------------------------------------------------
+    const workStates = [
+      ACTIVITY_STATE.THINKING,
+      ACTIVITY_STATE.READING,
+      ACTIVITY_STATE.EDITING,
+      ACTIVITY_STATE.RUNNING_COMMAND,
+    ];
+
+    if (workStates.includes(activity)) {
+      wf._sessionActivated = true;
+
+      // Agent is still working — cancel any pending auto-exit
+      if (wf._autoExitTimer) {
+        clearTimeout(wf._autoExitTimer);
+        wf._autoExitTimer = null;
+      }
     }
 
-    // Small delay to let the full prompt render before responding
-    setTimeout(() => {
-      const session = this.#sessionManager.getSession(sessionId);
-      if (!session || session.state !== 'running') return;
+    // ---------------------------------------------------------------
+    // Auto-exit: when a workflow session goes IDLE *or* WAITING_FOR_INPUT
+    // after having done work, send /exit so the process terminates and
+    // the workflow advances.
+    //
+    // WAITING_FOR_INPUT is a terminal state in ActivityParser (the 8s
+    // inactivity timer won't transition it to IDLE), so we must handle
+    // it here too — otherwise the session stalls forever after the agent
+    // finishes and asks "shall I proceed?" or similar.
+    //
+    // We add a 15s confirmation delay and require 30s minimum session age
+    // to avoid false positives from brief pauses in output.
+    // ---------------------------------------------------------------
+    const shouldAutoExit =
+      wf._sessionActivated &&
+      (activity === ACTIVITY_STATE.IDLE || activity === ACTIVITY_STATE.WAITING_FOR_INPUT);
 
-      // Check the session is still in a waiting state
-      if (
-        session.activity !== ACTIVITY_STATE.WAITING_FOR_APPROVAL &&
-        session.activity !== ACTIVITY_STATE.WAITING_FOR_INPUT
-      ) {
+    if (shouldAutoExit) {
+      // Don't auto-exit too early — the session may still be producing output
+      // between tool calls. Require at least 30s of session lifetime.
+      const sessionAge = Date.now() - (wf._sessionStartedAt || Date.now());
+      if (sessionAge < 30_000) {
         return;
       }
 
-      // For architect sessions asking questions, tell it to stop and not implement
-      // For all other sessions, send "yes" to approve and continue
-      try {
+      // Clear any existing timer (shouldn't happen, but be safe)
+      if (wf._autoExitTimer) clearTimeout(wf._autoExitTimer);
+
+      // Use a longer delay (15s) to avoid false positives from brief pauses
+      wf._autoExitTimer = setTimeout(() => {
+        wf._autoExitTimer = null;
+        const session = this.#sessionManager.getSession(sessionId);
+        if (!session || session.state !== SESSION_STATE.RUNNING) return;
+        if (wf.currentSessionId !== sessionId) return;
+        // Verify still idle/waiting (agent didn't start working again)
         if (
-          wf.state === WORKFLOW_STATE.ARCHITECTING &&
-          activity === ACTIVITY_STATE.WAITING_FOR_INPUT
+          session.activity !== ACTIVITY_STATE.IDLE &&
+          session.activity !== ACTIVITY_STATE.DONE &&
+          session.activity !== ACTIVITY_STATE.WAITING_FOR_INPUT
         ) {
-          session.pty.write('No. Do not implement anything. Just output the plan and finish.\n');
-          console.log(
-            `[workflow ${wf.id.slice(0, 8)}] Auto-responded to architect question: do not implement, just finish (session ${sessionId.slice(0, 8)})`,
-          );
-        } else {
-          session.pty.write('yes\n');
-          console.log(
-            `[workflow ${wf.id.slice(0, 8)}] Auto-responded "yes" to ${activity} prompt in session ${sessionId.slice(0, 8)}`,
+          return;
+        }
+
+        try {
+          // For WAITING_FOR_INPUT, first decline to proceed, then exit.
+          // For IDLE/DONE, just send /exit directly.
+          if (session.activity === ACTIVITY_STATE.WAITING_FOR_INPUT) {
+            session.pty.write('no\n');
+            console.log(
+              `[workflow ${wf.id.slice(0, 8)}] Auto-declined input prompt in session ${sessionId.slice(0, 8)}`,
+            );
+            // Give the agent a moment to process the "no", then exit
+            setTimeout(() => {
+              try {
+                const s = this.#sessionManager.getSession(sessionId);
+                if (s && s.state === SESSION_STATE.RUNNING && wf.currentSessionId === sessionId) {
+                  s.pty.write('/exit\n');
+                  console.log(
+                    `[workflow ${wf.id.slice(0, 8)}] Auto-exiting session ${sessionId.slice(0, 8)} after decline`,
+                  );
+                }
+              } catch { /* session already gone */ }
+            }, 3000);
+          } else {
+            session.pty.write('/exit\n');
+            console.log(
+              `[workflow ${wf.id.slice(0, 8)}] Auto-exiting idle workflow session ${sessionId.slice(0, 8)} (was: ${activity})`,
+            );
+          }
+        } catch (err) {
+          console.error(
+            `[workflow ${wf.id.slice(0, 8)}] Failed to auto-exit session:`,
+            err.message,
           );
         }
+      }, 15_000);
+      return;
+    }
+
+    // ---------------------------------------------------------------
+    // Auto-respond to permission prompts (WAITING_FOR_APPROVAL only).
+    // WAITING_FOR_INPUT is now handled by auto-exit above.
+    // ---------------------------------------------------------------
+    if (activity !== ACTIVITY_STATE.WAITING_FOR_APPROVAL) {
+      return;
+    }
+
+    // Delay to let the full prompt render and confirm it's a real approval prompt.
+    // The activity parser uses 300ms debounce, so 2.5s gives time for any
+    // follow-up output to override a false positive detection.
+    setTimeout(() => {
+      const session = this.#sessionManager.getSession(sessionId);
+      if (!session || session.state !== SESSION_STATE.RUNNING) return;
+
+      // Re-check the session is still waiting for approval (not overridden)
+      if (session.activity !== ACTIVITY_STATE.WAITING_FOR_APPROVAL) {
+        return;
+      }
+
+      try {
+        session.pty.write('yes\n');
+        console.log(
+          `[workflow ${wf.id.slice(0, 8)}] Auto-responded "yes" to approval prompt in session ${sessionId.slice(0, 8)}`,
+        );
       } catch (err) {
         console.error(
           `[workflow ${wf.id.slice(0, 8)}] Failed to auto-respond:`,
           err.message,
         );
       }
-    }, 1500); // 1.5s delay to let the prompt fully render
+    }, 2500);
   }
 
   /**

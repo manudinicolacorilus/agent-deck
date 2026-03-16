@@ -6,36 +6,35 @@ import { ACTIVITY_STATE } from '@agent-deck/shared';
  * "Waiting for approval" is checked first since it means the agent is blocked.
  */
 const PATTERNS = [
-  // Waiting for user approval (Claude CLI permission prompts)
+  // Waiting for user approval (Claude CLI / Copilot permission prompts).
+  // These must be specific to actual CLI prompts — generic words like "Allow"
+  // or "Accept" cause false positives on plan/review text.
   { state: ACTIVITY_STATE.WAITING_FOR_APPROVAL, patterns: [
-    /\bAllow\b/i,
-    /\bDo you want to/i,
+    /\bAllow\b.*\b[Yy]\/[Nn]\b/,          // "Allow? (Y/n)" style prompts
+    /\bDo you want to\b.*\?\s*$/,           // "Do you want to run this?" at end of line
     /\bPress Enter\b/i,
-    /\bY\/n\b/i,
-    /\by\/N\b/i,
+    /\bY\/n\b/,                             // explicit Y/n prompt
+    /\by\/N\b/,                             // explicit y/N prompt
     /\byes\/no\b/i,
-    /\bApprove\b/i,
-    /\bDeny\b/i,
-    /\bAccept\b/i,
-    /\bReject\b/i,
-    /\u23ce/,           // ⏎ symbol used in Claude CLI
+    /\u23ce/,                               // ⏎ symbol used in Claude CLI
     /\bto run\b.*\bto deny\b/i,
     /\bto run\b.*\bto skip\b/i,
+    /\bAllow\b.*\bDeny\b/,                  // "Allow" and "Deny" on same line (permission dialog)
   ]},
-  // Agent is asking a question / waiting for user input (not a permission prompt)
+  // Agent is asking a question / waiting for user input (not a permission prompt).
+  // Patterns must look like direct questions, not plan descriptions.
+  // Removed: start...plan, implement...plan, begin...implementation — these
+  // match normal plan output text and cause false detections.
   { state: ACTIVITY_STATE.WAITING_FOR_INPUT, patterns: [
-    /\bWould you like\b/i,
-    /\bShall I\b/i,
-    /\bDo you want me to\b/i,
+    /\bWould you like\b.*\?/i,
+    /\bShall I\b.*\?/i,
+    /\bDo you want me to\b.*\?/i,
     /\bReady to\b.*\?/i,
-    /\bShould I\b/i,
-    /\bWant me to\b/i,
+    /\bShould I\b.*\?/i,
+    /\bWant me to\b.*\?/i,
     /\bProceed\?/i,
     /\bContinue\?/i,
     /\bGo ahead\?/i,
-    /\bstart\b.*\bplan\b/i,
-    /\bimplement\b.*\bplan\b/i,
-    /\bbegin\b.*\bimplementation\b/i,
   ]},
   // Reading files — patterns should be specific to avoid false positives from CLI echoes
   { state: ACTIVITY_STATE.READING, patterns: [
