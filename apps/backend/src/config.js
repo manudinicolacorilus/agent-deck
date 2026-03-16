@@ -29,7 +29,7 @@ const config = {
           shell: 'powershell.exe',
           args: [
             '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
-            `cd '${workDir}'; copilot ${options.yolo ? '--allow-all-tools ' : ''}-p (Get-Content -Raw '${promptFile}')`,
+            `cd '${workDir}'; copilot ${options.yolo ? '--yolo ' : ''}--no-alt-screen -i (Get-Content -Raw '${promptFile}')`,
           ],
           promptFile,
         };
