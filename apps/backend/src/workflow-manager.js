@@ -494,7 +494,7 @@ export default class WorkflowManager extends EventEmitter {
 
         try {
           // For WAITING_FOR_INPUT, first decline to proceed, then exit.
-          // For IDLE/DONE, just send /exit directly.
+          // For IDLE/DONE, just terminate directly.
           if (session.activity === ACTIVITY_STATE.WAITING_FOR_INPUT) {
             session.pty.write('no\n');
             console.log(
@@ -505,18 +505,18 @@ export default class WorkflowManager extends EventEmitter {
               try {
                 const s = this.#sessionManager.getSession(sessionId);
                 if (s && s.state === SESSION_STATE.RUNNING && wf.currentSessionId === sessionId) {
-                  s.pty.write('/exit\n');
                   console.log(
                     `[workflow ${wf.id.slice(0, 8)}] Auto-exiting session ${sessionId.slice(0, 8)} after decline`,
                   );
+                  this.#terminateWorkflowSession(wf, s, sessionId);
                 }
               } catch { /* session already gone */ }
             }, 3000);
           } else {
-            session.pty.write('/exit\n');
             console.log(
               `[workflow ${wf.id.slice(0, 8)}] Auto-exiting idle workflow session ${sessionId.slice(0, 8)} (was: ${activity})`,
             );
+            this.#terminateWorkflowSession(wf, session, sessionId);
           }
         } catch (err) {
           console.error(
@@ -572,6 +572,22 @@ export default class WorkflowManager extends EventEmitter {
     return null;
   }
 
+  /**
+   * Terminate a workflow session in an engine-aware way.
+   * Copilot CLI supports `/exit`; other engines (Claude, etc.) do not,
+   * so we kill the PTY process directly and flag the exit as intentional.
+   */
+  #terminateWorkflowSession(wf, session, sessionId) {
+    if (session.engine === 'copilot') {
+      session.pty.write('/exit\n');
+    } else {
+      // Non-copilot engines don't have a /exit command.
+      // Kill the PTY directly; flag it so the exit handler treats it as success.
+      wf._autoExitKill = true;
+      this.#sessionManager.killSession(sessionId);
+    }
+  }
+
   // ------------------------------------------------------------------
   // Session exit handler
   // ------------------------------------------------------------------
@@ -602,7 +618,13 @@ export default class WorkflowManager extends EventEmitter {
       lastStep.completedAt = new Date().toISOString();
     }
 
-    if (exitCode !== 0) {
+    // Non-copilot engines (Claude, etc.) are terminated via PTY kill, which
+    // produces a non-zero exit code. The _autoExitKill flag tells us this
+    // was an intentional termination, not an actual error.
+    const wasAutoExitKill = wf._autoExitKill;
+    wf._autoExitKill = false;
+
+    if (exitCode !== 0 && !wasAutoExitKill) {
       console.log(`[workflow ${wf.id.slice(0, 8)}] Session exited with code ${exitCode}, marking error`);
       wf.state = WORKFLOW_STATE.ERROR;
       wf.error = `Session exited with code ${exitCode}`;
