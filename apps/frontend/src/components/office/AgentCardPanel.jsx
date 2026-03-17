@@ -46,11 +46,35 @@ function getAgentStatus(visualState) {
   return { label: 'Idle', color: C.dimmed };
 }
 
-/* ─── Edit modal overlay for model/role ─── */
+const SKIN_TONES = ['#f4c794', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
+
+const HAT_OPTIONS = [
+  { id: null, label: 'None', icon: '—' },
+  { id: 'hardhat', label: 'Hard Hat', icon: '⛑️' },
+  { id: 'tophat', label: 'Top Hat', icon: '🎩' },
+  { id: 'beanie', label: 'Beanie', icon: '🧢' },
+  { id: 'crown', label: 'Crown', icon: '👑' },
+  { id: 'wizard', label: 'Wizard', icon: '🧙' },
+];
+
+const PET_OPTIONS = [
+  { id: null, label: 'None', icon: '—' },
+  { id: 'cat', label: 'Cat', icon: '🐱' },
+  { id: 'dog', label: 'Dog', icon: '🐶' },
+  { id: 'bird', label: 'Bird', icon: '🐦' },
+  { id: 'robot', label: 'Robot', icon: '🤖' },
+  { id: 'duck', label: 'Duck', icon: '🦆' },
+];
+
+/* ─── Edit modal overlay for model/role/appearance ─── */
 function AgentEditModal({ agent, engines, onSave, onClose }) {
+  const [name, setName] = useState(agent.name || '');
   const [engine, setEngine] = useState(agent.engine || 'copilot');
   const [role, setRole] = useState(agent.role || null);
   const [yolo, setYolo] = useState(agent.yolo || false);
+  const [skinColor, setSkinColor] = useState(agent.skinColor || null);
+  const [hat, setHat] = useState(agent.hat || null);
+  const [pet, setPet] = useState(agent.pet || null);
 
   useEffect(() => {
     if (agent.role === AGENT_ROLE.REVIEWER) {
@@ -59,9 +83,18 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
   }, [role]);
 
   const handleSave = () => {
-    onSave(agent.id, { engine, role, yolo });
+    onSave(agent.id, { name, engine, role, yolo, skinColor, hat, pet });
     onClose();
   };
+
+  const pillBtn = (selected, activeColor) => ({
+    padding: '3px 8px', fontSize: 10, fontWeight: 600,
+    border: `1px solid ${selected ? (activeColor || C.blue) : C.cardBorder}`,
+    borderRadius: 4, cursor: 'pointer',
+    background: selected ? `${activeColor || C.blue}22` : 'transparent',
+    color: selected ? (activeColor || C.blue) : C.muted,
+    fontFamily: 'inherit',
+  });
 
   return (
     <div
@@ -73,15 +106,34 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
       onClick={onClose}
     >
       <div
+        className="thin-scrollbar"
         style={{
-          width: 300, background: C.bg, border: `1px solid ${C.cardBorder}`,
+          width: 340, maxHeight: '85vh', overflowY: 'auto',
+          background: C.bg, border: `1px solid ${C.cardBorder}`,
           borderRadius: 10, boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
           padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
-          Edit: {agent.name}
+          Edit Agent
+        </div>
+
+        {/* Name */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{
+              padding: '6px 8px', background: C.selectBg, color: C.text,
+              border: `1px solid ${C.selectBorder}`, borderRadius: 6,
+              fontSize: 12, fontFamily: 'inherit', outline: 'none',
+            }}
+            onFocus={(e) => (e.target.style.borderColor = C.blue)}
+            onBlur={(e) => (e.target.style.borderColor = C.selectBorder)}
+          />
         </div>
 
         {/* Engine select */}
@@ -122,14 +174,7 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
                   setRole(opt.id);
                   if (opt.id === AGENT_ROLE.REVIEWER) setEngine('copilot');
                 }}
-                style={{
-                  padding: '3px 8px', fontSize: 10, fontWeight: 600,
-                  border: `1px solid ${role === opt.id ? (ROLE_COLOR[opt.id] || C.blue) : C.cardBorder}`,
-                  borderRadius: 4, cursor: 'pointer',
-                  background: role === opt.id ? `${ROLE_COLOR[opt.id] || C.blue}22` : 'transparent',
-                  color: role === opt.id ? (ROLE_COLOR[opt.id] || C.blue) : C.muted,
-                  fontFamily: 'inherit',
-                }}
+                style={pillBtn(role === opt.id, ROLE_COLOR[opt.id])}
               >
                 {opt.label}
               </button>
@@ -159,6 +204,87 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
           </button>
         </div>
 
+        {/* Divider */}
+        <div style={{ borderTop: `1px solid ${C.cardBorder}`, margin: '2px 0' }} />
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+          Appearance
+        </div>
+
+        {/* Skin Color */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Skin Color</label>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {/* "Auto" option (name-derived) */}
+            <button
+              type="button"
+              onClick={() => setSkinColor(null)}
+              title="Auto (derived from name)"
+              style={{
+                width: 24, height: 24, borderRadius: '50%', cursor: 'pointer',
+                border: skinColor === null ? `2px solid ${C.blue}` : `2px solid ${C.cardBorder}`,
+                background: 'conic-gradient(#f4c794, #e0ac69, #c68642, #8d5524, #ffdbac, #f4c794)',
+                boxShadow: skinColor === null ? `0 0 6px ${C.blue}66` : 'none',
+              }}
+            />
+            {SKIN_TONES.map((tone) => (
+              <button
+                key={tone}
+                type="button"
+                onClick={() => setSkinColor(tone)}
+                title={tone}
+                style={{
+                  width: 24, height: 24, borderRadius: '50%', cursor: 'pointer',
+                  border: skinColor === tone ? `2px solid ${C.blue}` : `2px solid ${C.cardBorder}`,
+                  background: tone,
+                  boxShadow: skinColor === tone ? `0 0 6px ${C.blue}66` : 'none',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Hat */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Hat</label>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {HAT_OPTIONS.map((opt) => (
+              <button
+                key={opt.id || 'none'}
+                type="button"
+                onClick={() => setHat(opt.id)}
+                title={opt.label}
+                style={{
+                  ...pillBtn(hat === opt.id, C.blue),
+                  padding: '4px 8px', fontSize: 13,
+                }}
+              >
+                {opt.icon}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Pet */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Pet</label>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {PET_OPTIONS.map((opt) => (
+              <button
+                key={opt.id || 'none'}
+                type="button"
+                onClick={() => setPet(opt.id)}
+                title={opt.label}
+                style={{
+                  ...pillBtn(pet === opt.id, C.blue),
+                  padding: '4px 8px', fontSize: 13,
+                }}
+              >
+                {opt.icon}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Actions */}
         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', marginTop: 4 }}>
           <button
@@ -175,10 +301,14 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
           <button
             type="button"
             onClick={handleSave}
+            disabled={!name.trim()}
             style={{
               padding: '5px 12px', fontSize: 11, fontWeight: 600,
-              background: '#238636', color: '#fff', border: '1px solid rgba(240,246,252,0.1)',
-              borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
+              background: name.trim() ? '#238636' : '#21262d',
+              color: name.trim() ? '#fff' : C.dimmed,
+              border: '1px solid rgba(240,246,252,0.1)',
+              borderRadius: 4, cursor: name.trim() ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit',
             }}
           >
             Save
@@ -269,7 +399,7 @@ function AgentCard({ agent, visualState, isEditing, onEdit, onDelete }) {
         )}
       </div>
 
-      {/* Info row: role + engine */}
+      {/* Info row: role + engine + accessories */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {agent.role && (
           <span style={{
@@ -288,6 +418,16 @@ function AgentCard({ agent, visualState, isEditing, onEdit, onDelete }) {
         }}>
           {agent.engine || 'copilot'}
         </span>
+        {agent.hat && (
+          <span style={{ fontSize: 10, lineHeight: 1 }} title={`Hat: ${agent.hat}`}>
+            {HAT_OPTIONS.find((h) => h.id === agent.hat)?.icon || ''}
+          </span>
+        )}
+        {agent.pet && (
+          <span style={{ fontSize: 10, lineHeight: 1 }} title={`Pet: ${agent.pet}`}>
+            {PET_OPTIONS.find((p) => p.id === agent.pet)?.icon || ''}
+          </span>
+        )}
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: 9, color: status.color }}>
           {status.label}

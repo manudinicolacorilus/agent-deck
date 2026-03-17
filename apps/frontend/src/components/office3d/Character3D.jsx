@@ -68,9 +68,11 @@ const Character3D = memo(function Character3D({
   const rightLegRef = useRef();
 
   const accent = useMemo(() => hslToHex(nameToColor(agent.name)), [agent.name]);
-  const skin = useMemo(() => nameToSkin(agent.name), [agent.name]);
+  const skin = agent.skinColor || useMemo(() => nameToSkin(agent.name), [agent.name]);
   const roleColor = agent.role ? ROLE_COLORS[agent.role] : null;
   const animation = getCharacterAnimation(visualState, activity);
+  const agentHat = agent.hat || null;
+  const agentPet = agent.pet || null;
 
   // Slightly darker accent for shirt detail
   const accentDark = useMemo(() => {
@@ -329,6 +331,93 @@ const Character3D = memo(function Character3D({
             <meshStandardMaterial color={roleColor} transparent opacity={0.5} />
           </mesh>
         </group>
+      )}
+
+      {/* === HAT === */}
+      {agentHat === 'hardhat' && (
+        <group position={[0, 3.65, 0]}>
+          <mesh>
+            <sphereGeometry args={[0.58, 12, 12, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+            <meshStandardMaterial color="#f5c542" roughness={0.4} />
+          </mesh>
+          {/* Brim */}
+          <mesh position={[0, -0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.72, 0.72, 0.06, 16]} />
+            <meshStandardMaterial color="#f5c542" roughness={0.5} />
+          </mesh>
+        </group>
+      )}
+      {agentHat === 'tophat' && (
+        <group position={[0, 3.75, 0]}>
+          {/* Cylinder */}
+          <mesh position={[0, 0.35, 0]}>
+            <cylinderGeometry args={[0.35, 0.38, 0.8, 12]} />
+            <meshStandardMaterial color="#1a1a2e" roughness={0.3} />
+          </mesh>
+          {/* Brim */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.6, 0.6, 0.06, 16]} />
+            <meshStandardMaterial color="#1a1a2e" roughness={0.3} />
+          </mesh>
+        </group>
+      )}
+      {agentHat === 'beanie' && (
+        <group position={[0, 3.55, 0]}>
+          <mesh>
+            <sphereGeometry args={[0.56, 12, 12, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
+            <meshStandardMaterial color="#da3633" roughness={0.9} />
+          </mesh>
+          {/* Pom-pom */}
+          <mesh position={[0, 0.45, 0]}>
+            <sphereGeometry args={[0.12, 8, 8]} />
+            <meshStandardMaterial color="#fff" roughness={0.9} />
+          </mesh>
+        </group>
+      )}
+      {agentHat === 'crown' && (
+        <group position={[0, 3.6, 0]}>
+          <mesh>
+            <cylinderGeometry args={[0.45, 0.5, 0.35, 5]} />
+            <meshStandardMaterial color="#f5c542" roughness={0.3} metalness={0.6} />
+          </mesh>
+          {/* Jewel */}
+          <mesh position={[0, 0, 0.45]}>
+            <sphereGeometry args={[0.08, 6, 6]} />
+            <meshStandardMaterial color="#da3633" emissive="#da3633" emissiveIntensity={0.5} />
+          </mesh>
+        </group>
+      )}
+      {agentHat === 'wizard' && (
+        <group position={[0, 3.65, 0]}>
+          {/* Cone */}
+          <mesh position={[0, 0.45, 0]}>
+            <coneGeometry args={[0.45, 1.0, 12]} />
+            <meshStandardMaterial color="#6e40c9" roughness={0.7} />
+          </mesh>
+          {/* Brim */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.7, 0.7, 0.05, 16]} />
+            <meshStandardMaterial color="#6e40c9" roughness={0.7} />
+          </mesh>
+          {/* Star */}
+          <mesh position={[0, 0.55, 0.35]}>
+            <sphereGeometry args={[0.07, 6, 6]} />
+            <meshStandardMaterial color="#f5c542" emissive="#f5c542" emissiveIntensity={1.2} />
+          </mesh>
+        </group>
+      )}
+
+      {/* === PET === */}
+      {agentPet && (
+        <Html position={[1.2, 0.3, 0.5]} center style={{ pointerEvents: 'none' }}>
+          <div style={{
+            fontSize: 18, lineHeight: 1,
+            animation: 'sprite-idle 2.5s ease-in-out infinite',
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
+          }}>
+            {{ cat: '🐱', dog: '🐶', bird: '🐦', robot: '🤖', duck: '🦆' }[agentPet] || ''}
+          </div>
+        </Html>
       )}
 
       {/* === NAME TAG (hover only) === */}
