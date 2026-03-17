@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as api from '../lib/api.js';
-import { AGENT_ROLE, REVIEW_MODELS } from '@agent-deck/shared';
+import { AGENT_ROLE } from '@agent-deck/shared';
 
 let lastUsedEngine = 'copilot';
 
@@ -8,7 +8,7 @@ const ROLE_OPTIONS = [
   { id: null, label: 'None', desc: 'General purpose agent' },
   { id: AGENT_ROLE.ARCHITECT, label: 'Architect', desc: 'Plans work, always uses plan mode' },
   { id: AGENT_ROLE.DEV, label: 'Developer', desc: 'Implements plans from architects' },
-  { id: AGENT_ROLE.REVIEWER, label: 'Reviewer', desc: 'Reviews code with 3 models (copilot)' },
+  { id: AGENT_ROLE.REVIEWER, label: 'Reviewer', desc: 'Reviews code with copilot /review' },
 ];
 
 const styles = {
@@ -314,7 +314,7 @@ export default function CreateAgentModal({ isOpen, onClose, onSubmit }) {
               </div>
               {role === AGENT_ROLE.REVIEWER && (
                 <div style={{ fontSize: 11, color: '#f0883e', marginTop: 4 }}>
-                  Reviewer agents always use Copilot with 3 models: {REVIEW_MODELS.join(', ')}
+                  Reviewer agents always use Copilot&apos;s built-in /review command
                 </div>
               )}
             </div>
