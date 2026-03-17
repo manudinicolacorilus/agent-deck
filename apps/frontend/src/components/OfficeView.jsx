@@ -2,8 +2,10 @@ import React from 'react';
 import { AGENT_VISUAL_STATE } from '@agent-deck/shared';
 import WorkflowPanel from './WorkflowPanel';
 import OfficeFloorPlan from './office/OfficeFloorPlan';
+import AgentCardPanel from './office/AgentCardPanel';
 import useCharacterPositions from '../hooks/useCharacterPositions';
 import useAgentInteractions from '../hooks/useAgentInteractions';
+import OfficeChatPanel from './office/OfficeChatPanel';
 import '../styles/sprites.css';
 
 /* ─── colour tokens ─── */
@@ -25,6 +27,9 @@ export default function OfficeView({
   onClickIdleAgent,
   onClickWorkingAgent,
   onDeleteAgent,
+  onUpdateAgent,
+  onCreateAgent,
+  onDropAgentOnDesk,
   onCancelWorkflow,
 }) {
   const { positions, deskAssignments, getDeskPosition } = useCharacterPositions(
@@ -87,6 +92,15 @@ export default function OfficeView({
         display: 'flex', gap: 12, flex: 1, minHeight: 0,
         alignItems: 'flex-start',
       }}>
+        {/* Agent Card Panel (left sidebar) */}
+        <AgentCardPanel
+          agents={agents}
+          visualStates={visualStates}
+          onUpdateAgent={onUpdateAgent}
+          onDeleteAgent={onDeleteAgent}
+          onCreateAgent={onCreateAgent}
+        />
+
         {/* 2D Floor Plan */}
         <div style={{
           flex: 1, overflow: 'auto', display: 'flex',
@@ -105,6 +119,7 @@ export default function OfficeView({
             onClickIdleAgent={onClickIdleAgent}
             onClickWorkingAgent={onClickWorkingAgent}
             onDeleteAgent={onDeleteAgent}
+            onDropAgentOnDesk={onDropAgentOnDesk}
           />
         </div>
 
@@ -133,6 +148,9 @@ export default function OfficeView({
             </div>
           </div>
         )}
+
+        {/* Office Chat */}
+        <OfficeChatPanel agents={agents} visualStates={visualStates} />
       </div>
     </div>
   );
