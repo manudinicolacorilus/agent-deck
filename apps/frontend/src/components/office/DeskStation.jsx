@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 /**
  * Enhanced desk station drawn on the floor plan.
@@ -46,21 +46,50 @@ const ACTIVITY_SCREEN = {
   error: 'ERR',
 };
 
-export default function DeskStation({ activity = 'idle', occupied = false, x = 0, y = 0, agentName }) {
+export default function DeskStation({ activity = 'idle', occupied = false, x = 0, y = 0, agentName, onDropAgent }) {
   const color = ACTIVITY_COLORS[activity] || ACTIVITY_COLORS.idle;
   const screenText = ACTIVITY_SCREEN[activity] || '...';
   const isActive = occupied && !['idle', 'done', 'error'].includes(activity);
   const isApproval = activity === 'waiting_for_approval';
+  const [dragOver, setDragOver] = useState(false);
+  const canDrop = !occupied && onDropAgent;
+
+  const handleDragOver = (e) => {
+    if (!canDrop) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOver(true);
+  };
+
+  const handleDragLeave = () => setDragOver(false);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (!canDrop) return;
+    const agentId = e.dataTransfer.getData('application/agent-id');
+    if (agentId) onDropAgent(agentId);
+  };
 
   return (
-    <div style={{
-      position: 'absolute',
-      left: x - 40,
-      top: y - 50,
-      width: 80,
-      height: 70,
-      pointerEvents: 'none',
-    }}>
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      style={{
+        position: 'absolute',
+        left: x - 40,
+        top: y - 50,
+        width: 80,
+        height: 70,
+        pointerEvents: canDrop ? 'auto' : 'none',
+        borderRadius: 6,
+        outline: dragOver ? '2px dashed #58a6ff' : 'none',
+        outlineOffset: 2,
+        background: dragOver ? 'rgba(88, 166, 255, 0.08)' : 'transparent',
+        transition: 'outline 0.15s, background 0.15s',
+      }}
+    >
       {/* Monitor */}
       <div style={{
         position: 'absolute',

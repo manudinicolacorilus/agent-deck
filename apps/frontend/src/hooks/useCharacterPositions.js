@@ -34,6 +34,27 @@ const IDLE_SPOTS = [
 ];
 
 /**
+ * Compute a small offset for agent `index` among `total` agents at the same spot.
+ * Agents fan out in a circle around the base position.
+ */
+function getIdleOffset(agentIndex, totalAtSpot) {
+  if (totalAtSpot <= 1) return { dx: 0, dy: 0 };
+  const angle = (2 * Math.PI * agentIndex) / totalAtSpot;
+  const radius = 22 + totalAtSpot * 4;
+  return {
+    dx: Math.round(Math.cos(angle) * radius),
+    dy: Math.round(Math.sin(angle) * radius),
+  };
+}
+
+function clampToBreakRoom(pos) {
+  return {
+    x: Math.max(25, Math.min(235, pos.x)),
+    y: Math.max(115, Math.min(335, pos.y)),
+  };
+}
+
+/**
  * Waypoint graph for pathfinding between named areas.
  * Returns an array of positions to walk through.
  */
@@ -123,6 +144,18 @@ export default function useCharacterPositions(agents, visualStates, activities, 
 
   // Update targets based on visual states
   useEffect(() => {
+    // Count agents per idle landmark for offset spreading
+    const idleGroups = {};
+    for (const agent of agents) {
+      const vs = visualStates[agent.id];
+      if (vs === AGENT_VISUAL_STATE.IDLE_AT_COFFEE
+        || vs === AGENT_VISUAL_STATE.CHATTING_AT_COOLER
+        || vs === AGENT_VISUAL_STATE.SITTING_ON_COUCH) {
+        if (!idleGroups[vs]) idleGroups[vs] = [];
+        idleGroups[vs].push(agent.id);
+      }
+    }
+
     for (const agent of agents) {
       const vs = visualStates[agent.id];
       const data = dataRef.current[agent.id];
@@ -130,15 +163,27 @@ export default function useCharacterPositions(agents, visualStates, activities, 
       let targetPos = null;
 
       switch (vs) {
-        case AGENT_VISUAL_STATE.IDLE_AT_COFFEE:
-          targetPos = POSITIONS.coffeeArea;
+        case AGENT_VISUAL_STATE.IDLE_AT_COFFEE: {
+          const group = idleGroups[vs] || [];
+          const idx = group.indexOf(agent.id);
+          const off = getIdleOffset(idx, group.length);
+          targetPos = clampToBreakRoom({ x: POSITIONS.coffeeArea.x + off.dx, y: POSITIONS.coffeeArea.y + off.dy });
           break;
-        case AGENT_VISUAL_STATE.CHATTING_AT_COOLER:
-          targetPos = POSITIONS.waterCooler;
+        }
+        case AGENT_VISUAL_STATE.CHATTING_AT_COOLER: {
+          const group = idleGroups[vs] || [];
+          const idx = group.indexOf(agent.id);
+          const off = getIdleOffset(idx, group.length);
+          targetPos = clampToBreakRoom({ x: POSITIONS.waterCooler.x + off.dx, y: POSITIONS.waterCooler.y + off.dy });
           break;
-        case AGENT_VISUAL_STATE.SITTING_ON_COUCH:
-          targetPos = POSITIONS.couch;
+        }
+        case AGENT_VISUAL_STATE.SITTING_ON_COUCH: {
+          const group = idleGroups[vs] || [];
+          const idx = group.indexOf(agent.id);
+          const off = getIdleOffset(idx, group.length);
+          targetPos = clampToBreakRoom({ x: POSITIONS.couch.x + off.dx, y: POSITIONS.couch.y + off.dy });
           break;
+        }
         case AGENT_VISUAL_STATE.WALKING_TO_DESK:
         case AGENT_VISUAL_STATE.WORKING_AT_DESK:
         case AGENT_VISUAL_STATE.THINKING_AT_DESK: {

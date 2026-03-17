@@ -32,7 +32,7 @@ const styles = {
 
 export default function App() {
   const { sessions, loading, error, createSession, killSession, closeSession } = useAgentSessions();
-  const { agents, createAgent, deleteAgent, assignPrompt } = useAgents();
+  const { agents, createAgent, updateAgent, deleteAgent, assignPrompt } = useAgents();
   const health = useBackendHealth();
   const activities = useActivityTracker(sessions);
   const visualStates = useAgentVisualStates(agents, sessions, activities);
@@ -87,6 +87,11 @@ export default function App() {
     setView('terminal');
   }, []);
 
+  const handleDropAgentOnDesk = useCallback((agentId) => {
+    const agent = agents.find((a) => a.id === agentId);
+    if (agent) setAssignAgent(agent);
+  }, [agents]);
+
   return (
     <div style={styles.layout}>
       <Header
@@ -111,6 +116,9 @@ export default function App() {
             onClickIdleAgent={handleClickIdleAgent}
             onClickWorkingAgent={handleClickWorkingAgent}
             onDeleteAgent={deleteAgent}
+            onUpdateAgent={updateAgent}
+            onCreateAgent={() => setCreateAgentModalOpen(true)}
+            onDropAgentOnDesk={handleDropAgentOnDesk}
             onCancelWorkflow={cancelWorkflow}
           />
         )}

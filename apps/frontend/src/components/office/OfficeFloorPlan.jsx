@@ -239,6 +239,7 @@ export default function OfficeFloorPlan({
   onClickIdleAgent,
   onClickWorkingAgent,
   onDeleteAgent,
+  onDropAgentOnDesk,
 }) {
   const [hoveredAgent, setHoveredAgent] = useState(null);
 
@@ -280,6 +281,7 @@ export default function OfficeFloorPlan({
           occupied={!!agent}
           activity={activity}
           agentName={agent?.name}
+          onDropAgent={onDropAgentOnDesk}
         />
       );
     }
