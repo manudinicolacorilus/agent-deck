@@ -76,7 +76,8 @@ export default function CharacterSprite({
   pet = null,
 }) {
   const accent = useMemo(() => nameToColor(name), [name]);
-  const skin = skinColor || useMemo(() => nameToSkin(name), [name]);
+  const defaultSkin = useMemo(() => nameToSkin(name), [name]);
+  const skin = skinColor || defaultSkin;
   const roleColor = role ? ROLE_COLORS[role] : null;
   const roleBg = role ? ROLE_BADGE_BG[role] : null;
 

@@ -68,7 +68,8 @@ const Character3D = memo(function Character3D({
   const rightLegRef = useRef();
 
   const accent = useMemo(() => hslToHex(nameToColor(agent.name)), [agent.name]);
-  const skin = agent.skinColor || useMemo(() => nameToSkin(agent.name), [agent.name]);
+  const defaultSkin = useMemo(() => nameToSkin(agent.name), [agent.name]);
+  const skin = agent.skinColor || defaultSkin;
   const roleColor = agent.role ? ROLE_COLORS[agent.role] : null;
   const animation = getCharacterAnimation(visualState, activity);
   const agentHat = agent.hat || null;
