@@ -365,6 +365,9 @@ export default function OfficeFloorPlan({
               animation={animation}
               facing={pos.facing || 'down'}
               size={1}
+              skinColor={agent.skinColor || null}
+              hat={agent.hat || null}
+              pet={agent.pet || null}
             />
 
             {/* Agent name on hover */}

@@ -39,13 +39,16 @@ class AgentStore {
     return this.#agents.find((a) => a.id === id) || null;
   }
 
-  create({ name, engine, yolo = false, role = null }) {
+  create({ name, engine, yolo = false, role = null, skinColor = null, hat = null, pet = null }) {
     const agent = {
       id: uuidv4(),
       name,
       engine,
       yolo: Boolean(yolo),
       role: role || null,
+      skinColor: skinColor || null,
+      hat: hat || null,
+      pet: pet || null,
       createdAt: new Date().toISOString(),
       currentSessionId: null,
     };
@@ -57,7 +60,7 @@ class AgentStore {
   update(id, fields) {
     const agent = this.get(id);
     if (!agent) return null;
-    const allowed = ['name', 'engine', 'yolo', 'role'];
+    const allowed = ['name', 'engine', 'yolo', 'role', 'skinColor', 'hat', 'pet'];
     for (const key of allowed) {
       if (key in fields) agent[key] = fields[key];
     }

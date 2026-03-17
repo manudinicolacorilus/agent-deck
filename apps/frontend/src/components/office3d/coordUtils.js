@@ -101,7 +101,7 @@ export const ACTIVITY_ICONS = {
 };
 
 // Skin tones (same as CharacterSprite)
-const SKIN_TONES = ['#f4c794', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
+export const SKIN_TONES = ['#f4c794', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
 
 export function nameToColor(name) {
   let hash = 0;

@@ -53,15 +53,30 @@ const ANIM_MAP = {
   sipping: 'sprite-sip 3s ease-in-out 1',
 };
 
+const HAT_STYLES = {
+  hardhat: { color: '#f5c542', borderRadius: '6px 6px 2px 2px', height: 7, extraTop: -3, brim: true },
+  tophat: { color: '#1a1a2e', borderRadius: '2px 2px 0 0', height: 10, extraTop: -5, brim: true },
+  beanie: { color: '#da3633', borderRadius: '8px 8px 2px 2px', height: 6, extraTop: -2, brim: false },
+  crown: { color: '#f5c542', borderRadius: '2px', height: 6, extraTop: -2, brim: false, isCrown: true },
+  wizard: { color: '#6e40c9', borderRadius: '50% 50% 4px 4px', height: 12, extraTop: -8, brim: true },
+};
+
+const PET_ICONS = {
+  cat: '🐱', dog: '🐶', bird: '🐦', robot: '🤖', duck: '🦆',
+};
+
 export default function CharacterSprite({
   name = 'Agent',
   role = null,
   animation = 'idle',
   facing = 'down',
   size = 1,
+  skinColor = null,
+  hat = null,
+  pet = null,
 }) {
   const accent = useMemo(() => nameToColor(name), [name]);
-  const skin = useMemo(() => nameToSkin(name), [name]);
+  const skin = skinColor || useMemo(() => nameToSkin(name), [name]);
   const roleColor = role ? ROLE_COLORS[role] : null;
   const roleBg = role ? ROLE_BADGE_BG[role] : null;
 
@@ -239,6 +254,65 @@ export default function CharacterSprite({
         zIndex: 1,
         animation: legAnim.right,
       }} />
+
+      {/* Hat */}
+      {hat && HAT_STYLES[hat] && (() => {
+        const h = HAT_STYLES[hat];
+        return (
+          <>
+            <div style={{
+              position: 'absolute',
+              top: (h.extraTop) * size,
+              left: 7 * size,
+              width: 18 * size,
+              height: h.height * size,
+              background: h.color,
+              borderRadius: h.borderRadius,
+              zIndex: 8,
+            }}>
+              {h.isCrown && (
+                <div style={{
+                  position: 'absolute', top: -3 * size, left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 0, height: 0,
+                  borderLeft: `${4 * size}px solid transparent`,
+                  borderRight: `${4 * size}px solid transparent`,
+                  borderBottom: `${4 * size}px solid ${h.color}`,
+                }} />
+              )}
+            </div>
+            {h.brim && (
+              <div style={{
+                position: 'absolute',
+                top: (h.extraTop + h.height - 1) * size,
+                left: 5 * size,
+                width: 22 * size,
+                height: 2 * size,
+                background: h.color,
+                borderRadius: `${1 * size}px`,
+                zIndex: 8,
+                filter: 'brightness(0.85)',
+              }} />
+            )}
+          </>
+        );
+      })()}
+
+      {/* Pet */}
+      {pet && PET_ICONS[pet] && (
+        <div style={{
+          position: 'absolute',
+          bottom: -2 * size,
+          right: -8 * size,
+          fontSize: 12 * size,
+          lineHeight: 1,
+          zIndex: 0,
+          animation: 'sprite-idle 2.5s ease-in-out infinite',
+          transform: `scaleX(${scaleX})`,
+        }}>
+          {PET_ICONS[pet]}
+        </div>
+      )}
     </div>
   );
 }
