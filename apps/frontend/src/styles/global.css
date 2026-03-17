@@ -80,3 +80,16 @@ code, pre, .mono {
 .coffee-steam {
   animation: coffeeStream 2s ease-in-out infinite;
 }
+
+/* Thin scrollbar for narrow panels */
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thin-scrollbar {
+  scrollbar-width: thin;
+}
