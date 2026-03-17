@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DirectoryBrowser from './DirectoryBrowser.jsx';
-import { AGENT_ROLE, REVIEW_MODELS } from '@agent-deck/shared';
+import { AGENT_ROLE } from '@agent-deck/shared';
 
 const styles = {
   overlay: {
@@ -270,12 +270,12 @@ export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }
                 <RoleStatus label="Reviewers" total={reviewers.length} idle={idleReviewers.length} color={ROLE_COLORS[AGENT_ROLE.REVIEWER]} />
               </div>
 
-              {/* Review models info */}
+              {/* Review info */}
               <div style={{
                 fontSize: 11, color: '#8b949e', padding: '8px 12px',
                 background: '#0d111744', borderRadius: 6, border: '1px solid #30363d',
               }}>
-                Review models: {REVIEW_MODELS.join(' / ')}
+                Review: uses Copilot&apos;s built-in /review command
               </div>
 
               {(architects.length === 0 || devs.length === 0 || reviewers.length === 0) && (

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { execSync } from 'node:child_process';
 import { v4 as uuidv4 } from 'uuid';
-import { WORKFLOW_STATE, AGENT_ROLE, REVIEW_MODELS, ACTIVITY_STATE, SESSION_STATE } from '@agent-deck/shared';
+import { WORKFLOW_STATE, AGENT_ROLE, ACTIVITY_STATE, SESSION_STATE } from '@agent-deck/shared';
 
 /**
  * Orchestrates multi-agent workflows: Architect → Dev → Review → (loop or done).
@@ -9,7 +9,7 @@ import { WORKFLOW_STATE, AGENT_ROLE, REVIEW_MODELS, ACTIVITY_STATE, SESSION_STAT
  * Workflow pipeline:
  * 1. Architect agent plans the work (always in plan mode)
  * 2. Dev agent implements the plan
- * 3. Reviewer agent(s) review using 3 models via copilot
+ * 3. Reviewer agent(s) review using copilot's /review command
  * 4. If remarks → back to dev for revision; if approved → done
  * 5. If no agent available for next step → queued until one is idle
  */
@@ -314,7 +314,7 @@ export default class WorkflowManager extends EventEmitter {
   }
 
   #assignReviewers(wf) {
-    // Reviewer always uses copilot, we spawn 3 sessions with 3 different models
+    // Reviewer always uses copilot with the built-in /review command
     const agent = this.#agentStore.findIdleByRole(AGENT_ROLE.REVIEWER);
     if (!agent) {
       if (wf.state !== WORKFLOW_STATE.WAITING_REVIEW) {
@@ -326,38 +326,9 @@ export default class WorkflowManager extends EventEmitter {
       return;
     }
 
-    // Build review prompt that asks the 3 models
-    const devOutput = this.#getLastStepOutput(wf, AGENT_ROLE.DEV);
-    const modelsStr = REVIEW_MODELS.join(', ');
-
-    const reviewPrompt = [
-      `You are a CODE REVIEWER. Review the following code changes.`,
-      ``,
-      `Use these 3 models for a thorough review: ${modelsStr}`,
-      ``,
-      `For each model, evaluate:`,
-      `1. Code correctness and potential bugs`,
-      `2. Architecture and design patterns`,
-      `3. Performance and security concerns`,
-      `4. Code style and best practices`,
-      ``,
-      `=== ORIGINAL TASK ===`,
-      wf.prompt,
-      ``,
-      `=== CODE CHANGES TO REVIEW ===`,
-      devOutput,
-      ``,
-      `=== REVIEW INSTRUCTIONS ===`,
-      `After consulting all 3 models (${modelsStr}), synthesize the feedback.`,
-      ``,
-      `If there are issues that MUST be fixed, list them clearly as REMARKS.`,
-      `End your review with one of:`,
-      `- "VERDICT: APPROVED" — if the code is ready to merge`,
-      `- "VERDICT: CHANGES_REQUESTED" — if changes are needed (list specific remarks)`,
-      ``,
-      `Be thorough but fair. Only request changes for real issues.`,
-      `Do NOT ask any questions or for confirmation. Just output your review and finish.`,
-    ].join('\n');
+    // Use copilot's built-in /review command (takes 0 arguments).
+    // It automatically analyzes uncommitted changes in the working directory.
+    const reviewPrompt = '/review';
 
     try {
       // Reset auto-exit tracking for the new session
@@ -387,11 +358,10 @@ export default class WorkflowManager extends EventEmitter {
         agentName: agent.name,
         sessionId: session.id,
         action: `review_cycle_${wf.reviewCycle}`,
-        models: [...REVIEW_MODELS],
         timestamp: new Date().toISOString(),
       });
       this.#emitUpdate(wf);
-      console.log(`[workflow ${wf.id.slice(0, 8)}] Reviewer ${agent.name} assigned (cycle ${wf.reviewCycle}, models: ${modelsStr})`);
+      console.log(`[workflow ${wf.id.slice(0, 8)}] Reviewer ${agent.name} assigned (cycle ${wf.reviewCycle})`);
     } catch (err) {
       console.error(`[workflow ${wf.id.slice(0, 8)}] Failed to assign reviewer:`, err.message);
       wf.state = WORKFLOW_STATE.ERROR;
@@ -676,7 +646,17 @@ export default class WorkflowManager extends EventEmitter {
 
   #handleReviewComplete(wf, output) {
     const cleanOutput = this.#stripAnsi(output);
-    const approved = /VERDICT:\s*APPROVED/i.test(cleanOutput);
+
+    // Support both the legacy "VERDICT: APPROVED" format and natural
+    // language approval signals from copilot's /review agent.
+    const approvalPatterns = /VERDICT:\s*APPROVED|no\s+(issues?|problems?|concerns?)\s+found|looks?\s+good|LGTM|approved?|ready\s+to\s+merge|no\s+changes?\s+(needed|required|necessary)/i;
+    const rejectionPatterns = /VERDICT:\s*CHANGES_REQUESTED|changes?\s+requested|must\s+(be\s+)?fix|needs?\s+(to\s+be\s+)?fix|critical\s+issue|should\s+(be\s+)?(fixed|changed|updated|addressed)/i;
+
+    const hasApproval = approvalPatterns.test(cleanOutput);
+    const hasRejection = rejectionPatterns.test(cleanOutput);
+
+    // Approve only when there is a clear approval signal and no rejection.
+    const approved = hasApproval && !hasRejection;
 
     if (approved) {
       console.log(`[workflow ${wf.id.slice(0, 8)}] Review APPROVED! Workflow complete.`);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { WORKFLOW_STATE, AGENT_ROLE, REVIEW_MODELS } from '@agent-deck/shared';
+import { WORKFLOW_STATE, AGENT_ROLE } from '@agent-deck/shared';
 
 const STATE_CONFIG = {
   [WORKFLOW_STATE.PENDING]: { label: 'Pending', color: '#8b949e', icon: '\u23F3' },
@@ -112,7 +112,7 @@ function WorkflowCard({ workflow, onCancel }) {
             <span>&rarr;</span>
             <span style={{ color: ROLE_COLORS[AGENT_ROLE.DEV] }}>Dev</span>
             <span>&rarr;</span>
-            <span style={{ color: ROLE_COLORS[AGENT_ROLE.REVIEWER] }}>Review ({REVIEW_MODELS.join(', ')})</span>
+            <span style={{ color: ROLE_COLORS[AGENT_ROLE.REVIEWER] }}>Review (/review)</span>
             <span>&harr;</span>
             <span style={{ color: '#3fb950' }}>Done</span>
           </div>
