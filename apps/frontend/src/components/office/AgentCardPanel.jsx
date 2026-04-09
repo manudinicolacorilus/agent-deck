@@ -27,18 +27,18 @@ const ROLE_CONFIG = {
 };
 
 const C = {
-  bg:          '#0f1318',
-  surface:     '#161b22',
-  cardBg:      '#161b22',
-  border:      '#21262d',
-  borderHover: '#30363d',
-  text:        '#e6edf3',
-  muted:       '#8b949e',
-  dimmed:      '#484f58',
-  green:       '#3fb950',
-  red:         '#da3633',
-  blue:        '#388bfd',
-  selectBg:    '#0d1117',
+  bg:          '#f8fafc',
+  surface:     '#ffffff',
+  cardBg:      '#ffffff',
+  border:      '#e2e8f0',
+  borderHover: '#cbd5e1',
+  text:        '#0f172a',
+  muted:       '#475569',
+  dimmed:      '#94a3b8',
+  green:       '#16a34a',
+  red:         '#dc2626',
+  blue:        '#2563eb',
+  selectBg:    '#f8fafc',
 };
 
 function getAgentStatus(visualState) {
@@ -102,7 +102,7 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
+        background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(6px)',
       }}
       onClick={onClose}
     >
@@ -111,7 +111,7 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
         style={{
           width: 340, maxHeight: '85vh', overflowY: 'auto',
           background: C.surface, border: `1px solid ${C.border}`,
-          borderRadius: 12, boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+          borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
           padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
           animation: 'scaleIn 0.18s ease both',
         }}
@@ -131,7 +131,7 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
               fontSize: 12, fontFamily: 'inherit', outline: 'none',
               transition: 'border-color 0.15s, box-shadow 0.15s',
             }}
-            onFocus={(e) => { e.target.style.borderColor = C.blue; e.target.style.boxShadow = '0 0 0 3px rgba(56,139,253,0.15)'; }}
+            onFocus={(e) => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.15)'; }}
             onBlur={(e)  => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none'; }}
           />
         </div>
@@ -267,9 +267,9 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
           >Cancel</button>
           <button type="button" onClick={handleSave} disabled={!name.trim()} style={{
             padding: '5px 14px', fontSize: 11, fontWeight: 600,
-            background: name.trim() ? '#238636' : '#21262d',
+            background: name.trim() ? '#16a34a' : '#f1f5f9',
             color: name.trim() ? '#fff' : C.dimmed,
-            border: '1px solid rgba(240,246,252,0.1)',
+            border: `1px solid ${name.trim() ? '#16a34a' : C.border}`,
             borderRadius: 6, cursor: name.trim() ? 'pointer' : 'not-allowed',
             fontFamily: 'inherit', transition: 'filter 0.15s',
           }}
@@ -310,7 +310,7 @@ function AgentCard({ agent, visualState, onEdit, onDelete }) {
       onMouseEnter={(e) => {
         e.currentTarget.style.background = `${engineColor}22`;
         e.currentTarget.style.borderColor = `${engineColor}66`;
-        e.currentTarget.style.boxShadow = `0 2px 8px rgba(0,0,0,0.3)`;
+        e.currentTarget.style.boxShadow = `0 2px 6px rgba(0,0,0,0.1)`;
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = `${engineColor}12`;
@@ -455,15 +455,15 @@ export default function AgentCardPanel({
   return (
     <div style={{
       width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column',
-      borderRight: '1px solid #21262d', background: C.bg,
+      borderRight: '1px solid #e2e8f0', background: C.bg,
       overflow: 'hidden',
     }}>
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 6,
         padding: '10px 12px',
-        borderBottom: '1px solid #21262d',
-        background: '#161b22', flexShrink: 0,
+        borderBottom: '1px solid #e2e8f0',
+        background: '#f8fafc', flexShrink: 0,
       }}>
         <span style={{ fontSize: 14 }}>🤖</span>
         <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '1.5px' }}>
@@ -472,8 +472,8 @@ export default function AgentCardPanel({
         {totalWorking > 0 && (
           <span style={{
             fontSize: 9, color: C.green, fontWeight: 700,
-            background: 'rgba(63,185,80,0.1)', padding: '1px 6px',
-            borderRadius: 8, border: '1px solid rgba(63,185,80,0.2)',
+            background: 'rgba(22,163,74,0.08)', padding: '1px 6px',
+            borderRadius: 8, border: '1px solid rgba(22,163,74,0.2)',
           }}>{totalWorking} working</span>
         )}
         <span style={{ flex: 1 }} />

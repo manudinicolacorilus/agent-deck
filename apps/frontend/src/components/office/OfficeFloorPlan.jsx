@@ -7,13 +7,13 @@ import DeskStation from './DeskStation';
 
 /* ─── colour tokens ─── */
 const C = {
-  floor: '#1a1f27',
-  floorTile: '#1e242c',
-  wall: '#2d333b',
-  wallTop: '#383f49',
-  wallAccent: '#444c56',
-  roomBg: '#161b22',
-  doorway: '#0d1117',
+  floor: '#f0f4f8',
+  floorTile: '#e8edf3',
+  wall: '#b0bec5',
+  wallTop: '#dde4ed',
+  wallAccent: '#c8d3df',
+  roomBg: '#f8fafc',
+  doorway: '#e2e8f0',
 };
 
 /* ─── Furniture drawn at absolute positions ─── */
@@ -22,14 +22,14 @@ function AbsCoffeeMachine({ x, y }) {
   return (
     <div style={{ position: 'absolute', left: x - 22, top: y - 30 }}>
       <div style={{
-        fontSize: 12, color: '#8b949e', letterSpacing: 2, textAlign: 'center',
+        fontSize: 12, color: '#94a3b8', letterSpacing: 2, textAlign: 'center',
         animation: 'coffeeStream 2s ease-in-out infinite',
       }}>
         ~ ~
       </div>
       <div style={{
-        width: 44, height: 48, background: '#484f58', borderRadius: '6px 6px 4px 4px',
-        border: '2px solid #6e7681', display: 'flex', flexDirection: 'column',
+        width: 44, height: 48, background: '#78909c', borderRadius: '6px 6px 4px 4px',
+        border: '2px solid #90a4ae', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 6, position: 'relative',
       }}>
         <div style={{
@@ -41,7 +41,7 @@ function AbsCoffeeMachine({ x, y }) {
           border: '2px solid #d0d7de', borderTop: 'none',
         }} />
       </div>
-      <div style={{ fontSize: 8, color: '#484f58', fontWeight: 600, textAlign: 'center', marginTop: 2 }}>
+      <div style={{ fontSize: 8, color: '#94a3b8', fontWeight: 600, textAlign: 'center', marginTop: 2 }}>
         COFFEE
       </div>
     </div>
@@ -59,7 +59,7 @@ function AbsWaterCooler({ x, y }) {
         width: 22, height: 22, background: '#e6edf3', borderRadius: 4,
         border: '2px solid #d0d7de', marginLeft: -2,
       }} />
-      <div style={{ fontSize: 7, color: '#484f58', fontWeight: 600, textAlign: 'center', marginTop: 1 }}>
+      <div style={{ fontSize: 7, color: '#94a3b8', fontWeight: 600, textAlign: 'center', marginTop: 1 }}>
         WATER
       </div>
     </div>
@@ -70,14 +70,14 @@ function AbsCouch({ x, y }) {
   return (
     <div style={{ position: 'absolute', left: x - 40, top: y - 14 }}>
       <div style={{
-        width: 72, height: 10, background: '#3b424c', borderRadius: '6px 6px 0 0',
-        border: '1px solid #484f58', borderBottom: 'none',
+        width: 72, height: 10, background: '#b0bec5', borderRadius: '6px 6px 0 0',
+        border: '1px solid #90a4ae', borderBottom: 'none',
       }} />
       <div style={{
-        width: 80, height: 18, background: '#444c56', borderRadius: '0 0 6px 6px',
-        border: '1px solid #484f58', borderTop: '1px solid #555d66',
+        width: 80, height: 18, background: '#cfd8dc', borderRadius: '0 0 6px 6px',
+        border: '1px solid #b0bec5', borderTop: '1px solid #cfd8dc',
       }} />
-      <div style={{ fontSize: 7, color: '#484f58', textAlign: 'center', marginTop: 2 }}>
+      <div style={{ fontSize: 7, color: '#94a3b8', textAlign: 'center', marginTop: 2 }}>
         lounge
       </div>
     </div>
@@ -120,7 +120,7 @@ function BreakRoomWalls() {
       }}>
         <span style={{ fontSize: 12 }}>☕</span>
         <span style={{
-          fontSize: 10, fontWeight: 700, color: '#8b949e',
+          fontSize: 10, fontWeight: 700, color: '#64748b',
           textTransform: 'uppercase', letterSpacing: 1.5,
         }}>
           Break Room
@@ -155,7 +155,7 @@ function WorkspaceWalls() {
       }}>
         <span style={{ fontSize: 12 }}>💻</span>
         <span style={{
-          fontSize: 10, fontWeight: 700, color: '#8b949e',
+          fontSize: 10, fontWeight: 700, color: '#64748b',
           textTransform: 'uppercase', letterSpacing: 1.5,
         }}>
           Workspace
@@ -187,7 +187,7 @@ function HallwayFloor() {
       <div style={{
         position: 'absolute', top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
-        fontSize: 9, color: '#484f5866', fontWeight: 600,
+        fontSize: 9, color: '#94a3b866', fontWeight: 600,
         textTransform: 'uppercase', letterSpacing: 2,
       }}>
         HALLWAY
@@ -336,7 +336,7 @@ export default function OfficeFloorPlan({
       borderRadius: 12,
       overflow: 'hidden',
       border: `2px solid ${C.wall}`,
-      boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
     }}>
       {/* Room structures */}
       <BreakRoomWalls />
@@ -411,12 +411,12 @@ export default function OfficeFloorPlan({
                 transform: 'translateX(-50%)',
                 fontSize: 10,
                 fontWeight: 700,
-                color: '#e6edf3',
-                background: '#161b22ee',
+                color: '#0f172a',
+                background: 'rgba(248,250,252,0.95)',
                 padding: '2px 6px',
                 borderRadius: 4,
                 whiteSpace: 'nowrap',
-                border: '1px solid #30363d',
+                border: '1px solid #e2e8f0',
                 zIndex: 200,
               }}>
                 {agent.name}
@@ -447,10 +447,10 @@ export default function OfficeFloorPlan({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: '#da363366',
+                  background: 'rgba(220,38,38,0.2)',
                   borderRadius: '50%',
                   fontSize: 10,
-                  color: '#ff7b72',
+                  color: '#dc2626',
                   cursor: 'pointer',
                   zIndex: 201,
                 }}
