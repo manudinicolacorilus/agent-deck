@@ -14,10 +14,16 @@ const ENGINE_LABEL = {
 
 /* ─── Role config ─── */
 const ROLE_CONFIG = {
-  [AGENT_ROLE.ARCHITECT]: { label: 'Architect', color: '#d2a8ff', icon: '🏗️' },
-  [AGENT_ROLE.DEV]:       { label: 'Developer',  color: '#58a6ff', icon: '💻' },
-  [AGENT_ROLE.REVIEWER]:  { label: 'Reviewer',   color: '#f0883e', icon: '🔍' },
-  general:                { label: 'General',    color: '#6e7681', icon: '🤖' },
+  [AGENT_ROLE.ARCHITECT]:    { label: 'Architect',    color: '#a78bfa', icon: '🏗️' },
+  [AGENT_ROLE.SUPER_MASTER]: { label: 'Super-Master', color: '#e879f9', icon: '👑' },
+  [AGENT_ROLE.MASTER]:       { label: 'Master',       color: '#22d3ee', icon: '🎯' },
+  [AGENT_ROLE.EXPLORER]:     { label: 'Explorer',     color: '#34d399', icon: '🔭' },
+  [AGENT_ROLE.DEV]:          { label: 'Developer',    color: '#58a6ff', icon: '💻' },
+  [AGENT_ROLE.INTEGRATOR]:   { label: 'Integrator',   color: '#fbbf24', icon: '🔗' },
+  [AGENT_ROLE.TESTER]:       { label: 'Tester',       color: '#f87171', icon: '🧪' },
+  [AGENT_ROLE.REVIEWER]:     { label: 'Reviewer',     color: '#f0883e', icon: '🔍' },
+  [AGENT_ROLE.RELEASER]:     { label: 'Releaser',     color: '#c084fc', icon: '🚀' },
+  general:                   { label: 'General',      color: '#6e7681', icon: '🤖' },
 };
 
 const C = {
@@ -162,10 +168,16 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
           <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</label>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {[
-              { id: null, label: 'None' },
-              { id: AGENT_ROLE.ARCHITECT, label: 'Architect' },
-              { id: AGENT_ROLE.DEV, label: 'Dev' },
-              { id: AGENT_ROLE.REVIEWER, label: 'Reviewer' },
+              { id: null,                       label: 'None' },
+              { id: AGENT_ROLE.ARCHITECT,       label: 'Architect' },
+              { id: AGENT_ROLE.SUPER_MASTER,    label: 'Super-Master' },
+              { id: AGENT_ROLE.MASTER,          label: 'Master' },
+              { id: AGENT_ROLE.EXPLORER,        label: 'Explorer' },
+              { id: AGENT_ROLE.DEV,             label: 'Dev' },
+              { id: AGENT_ROLE.INTEGRATOR,      label: 'Integrator' },
+              { id: AGENT_ROLE.TESTER,          label: 'Tester' },
+              { id: AGENT_ROLE.REVIEWER,        label: 'Reviewer' },
+              { id: AGENT_ROLE.RELEASER,        label: 'Releaser' },
             ].map((opt) => (
               <button key={opt.id || 'none'} type="button"
                 onClick={() => { setRole(opt.id); if (opt.id === AGENT_ROLE.REVIEWER) setEngine('copilot'); }}

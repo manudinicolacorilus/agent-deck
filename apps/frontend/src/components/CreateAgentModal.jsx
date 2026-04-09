@@ -5,10 +5,16 @@ import { AGENT_ROLE } from '@agent-deck/shared';
 let lastUsedEngine = 'copilot';
 
 const ROLE_OPTIONS = [
-  { id: null, label: 'None', desc: 'General purpose agent' },
-  { id: AGENT_ROLE.ARCHITECT, label: 'Architect', desc: 'Plans work, always uses plan mode' },
-  { id: AGENT_ROLE.DEV, label: 'Developer', desc: 'Implements plans from architects' },
-  { id: AGENT_ROLE.REVIEWER, label: 'Reviewer', desc: 'Reviews code with copilot /review' },
+  { id: null,                       label: 'None',         desc: 'General purpose agent' },
+  { id: AGENT_ROLE.ARCHITECT,       label: 'Architect',    desc: 'Plans work, always uses plan mode' },
+  { id: AGENT_ROLE.SUPER_MASTER,    label: 'Super-Master', desc: 'Oversees all agents and escalates' },
+  { id: AGENT_ROLE.MASTER,          label: 'Master',       desc: 'Coordinates sub-teams' },
+  { id: AGENT_ROLE.EXPLORER,        label: 'Explorer',     desc: 'Research, prototyping and discovery' },
+  { id: AGENT_ROLE.DEV,             label: 'Developer',    desc: 'Implements plans from architects' },
+  { id: AGENT_ROLE.INTEGRATOR,      label: 'Integrator',   desc: 'Merges work and resolves conflicts' },
+  { id: AGENT_ROLE.TESTER,          label: 'Tester',       desc: 'Writes and runs automated tests' },
+  { id: AGENT_ROLE.REVIEWER,        label: 'Reviewer',     desc: 'Reviews code with copilot /review' },
+  { id: AGENT_ROLE.RELEASER,        label: 'Releaser',     desc: 'Handles deploys and release notes' },
 ];
 
 const styles = {

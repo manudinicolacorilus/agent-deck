@@ -2,7 +2,7 @@ import React from 'react';
 import { AGENT_VISUAL_STATE } from '@agent-deck/shared';
 import WorkflowPanel from './WorkflowPanel';
 import OfficeFloorPlan from './office/OfficeFloorPlan';
-import AgentCardPanel from './office/AgentCardPanel';
+import AgentHealthSidebar from './office/AgentHealthSidebar';
 import useCharacterPositions from '../hooks/useCharacterPositions';
 import useAgentInteractions from '../hooks/useAgentInteractions';
 import '../styles/sprites.css';
@@ -63,8 +63,8 @@ export default function OfficeView({
       background: '#0d1117',
       minHeight: 0,
     }}>
-      {/* ── Left sidebar: agents grouped by role ── */}
-      <AgentCardPanel
+      {/* ── Left sidebar: health monitoring ── */}
+      <AgentHealthSidebar
         agents={agents}
         visualStates={visualStates}
         onUpdateAgent={onUpdateAgent}
