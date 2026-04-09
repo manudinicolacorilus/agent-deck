@@ -15,43 +15,46 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.6)',
+    background: 'rgba(0, 0, 0, 0.65)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    backdropFilter: 'blur(4px)',
+    backdropFilter: 'blur(6px)',
   },
   modal: {
     background: '#161b22',
     border: '1px solid #30363d',
-    borderRadius: 12,
+    borderRadius: 14,
     width: '100%',
     maxWidth: 520,
     padding: 0,
-    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.4)',
+    boxShadow: '0 24px 64px rgba(0, 0, 0, 0.6)',
+    animation: 'scaleIn 0.18s ease both',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid #30363d',
+    borderBottom: '1px solid #21262d',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 600,
     color: '#e6edf3',
+    letterSpacing: '-0.2px',
   },
   closeBtn: {
     background: 'none',
-    border: 'none',
+    border: '1px solid transparent',
     color: '#8b949e',
-    fontSize: 20,
+    fontSize: 18,
     cursor: 'pointer',
     padding: '4px 8px',
     borderRadius: 6,
     lineHeight: 1,
+    transition: 'color 0.15s ease, background 0.15s ease, border-color 0.15s ease',
   },
   body: {
     padding: '20px',
@@ -65,9 +68,11 @@ const styles = {
     gap: 6,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#8b949e',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
   },
   input: {
     padding: '8px 12px',
@@ -78,32 +83,38 @@ const styles = {
     fontSize: 14,
     fontFamily: 'inherit',
     outline: 'none',
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   },
   hint: {
     fontSize: 12,
     color: '#8b949e',
+    lineHeight: 1.5,
   },
   footer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 10,
-    padding: '16px 20px',
-    borderTop: '1px solid #30363d',
+    gap: 8,
+    padding: '14px 20px',
+    borderTop: '1px solid #21262d',
+    background: '#0f1318',
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
   cancelBtn: {
     padding: '6px 16px',
-    background: '#21262d',
-    color: '#e6edf3',
+    background: 'transparent',
+    color: '#8b949e',
     border: '1px solid #30363d',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
     fontFamily: 'inherit',
+    transition: 'color 0.15s ease, border-color 0.15s ease, background 0.15s ease',
   },
   submitBtn: {
-    padding: '6px 16px',
+    padding: '6px 18px',
     background: '#238636',
     color: '#fff',
     border: '1px solid rgba(240, 246, 252, 0.1)',
@@ -112,10 +123,11 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
     fontFamily: 'inherit',
+    transition: 'filter 0.15s ease, box-shadow 0.15s ease',
   },
   engineGroup: {
     display: 'flex',
-    gap: 10,
+    gap: 8,
   },
   engineOption: {
     display: 'flex',
@@ -251,8 +263,8 @@ export default function CreateAgentModal({ isOpen, onClose, onSubmit }) {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Backend Bot"
                 required
-                onFocus={(e) => (e.target.style.borderColor = '#388bfd')}
-                onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                onFocus={(e) => { e.target.style.borderColor = '#388bfd'; e.target.style.boxShadow = '0 0 0 3px rgba(56,139,253,0.15)'; }}
+                onBlur={(e) => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none'; }}
               />
             </div>
 

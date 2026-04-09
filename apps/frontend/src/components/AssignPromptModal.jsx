@@ -5,49 +5,56 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.6)',
+    background: 'rgba(0, 0, 0, 0.65)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    backdropFilter: 'blur(4px)',
+    backdropFilter: 'blur(6px)',
   },
   modal: {
     background: '#161b22',
     border: '1px solid #30363d',
-    borderRadius: 12,
+    borderRadius: 14,
     width: '100%',
     maxWidth: 520,
     padding: 0,
-    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.4)',
+    boxShadow: '0 24px 64px rgba(0, 0, 0, 0.6)',
+    animation: 'scaleIn 0.18s ease both',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid #30363d',
+    borderBottom: '1px solid #21262d',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 600,
     color: '#e6edf3',
+    letterSpacing: '-0.2px',
   },
   headerSub: {
     fontSize: 12,
-    color: '#8b949e',
-    fontWeight: 400,
+    color: '#58a6ff',
+    fontWeight: 500,
     marginLeft: 8,
+    background: 'rgba(56,139,253,0.1)',
+    padding: '1px 7px',
+    borderRadius: 10,
+    border: '1px solid rgba(56,139,253,0.2)',
   },
   closeBtn: {
     background: 'none',
-    border: 'none',
+    border: '1px solid transparent',
     color: '#8b949e',
-    fontSize: 20,
+    fontSize: 18,
     cursor: 'pointer',
     padding: '4px 8px',
     borderRadius: 6,
     lineHeight: 1,
+    transition: 'color 0.15s ease, background 0.15s ease, border-color 0.15s ease',
   },
   body: {
     padding: '20px',
@@ -56,9 +63,11 @@ const styles = {
     gap: 16,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#8b949e',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
   },
   input: {
     padding: '8px 12px',
@@ -69,9 +78,10 @@ const styles = {
     fontSize: 14,
     fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
     outline: 'none',
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   },
   textarea: {
-    padding: '8px 12px',
+    padding: '10px 12px',
     background: '#0d1117',
     border: '1px solid #30363d',
     borderRadius: 6,
@@ -80,30 +90,35 @@ const styles = {
     fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
     outline: 'none',
     resize: 'vertical',
-    minHeight: 100,
-    lineHeight: 1.5,
+    minHeight: 110,
+    lineHeight: 1.6,
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   },
   footer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 10,
-    padding: '16px 20px',
-    borderTop: '1px solid #30363d',
+    gap: 8,
+    padding: '14px 20px',
+    borderTop: '1px solid #21262d',
+    background: '#0f1318',
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
   cancelBtn: {
     padding: '6px 16px',
-    background: '#21262d',
-    color: '#e6edf3',
+    background: 'transparent',
+    color: '#8b949e',
     border: '1px solid #30363d',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
     fontFamily: 'inherit',
+    transition: 'color 0.15s ease, border-color 0.15s ease, background 0.15s ease',
   },
   submitBtn: {
-    padding: '6px 16px',
+    padding: '6px 18px',
     background: '#238636',
     color: '#fff',
     border: '1px solid rgba(240, 246, 252, 0.1)',
@@ -112,6 +127,7 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
     fontFamily: 'inherit',
+    transition: 'filter 0.15s ease, box-shadow 0.15s ease',
   },
   browseBtn: {
     padding: '8px 14px',
@@ -125,6 +141,7 @@ const styles = {
     fontFamily: 'inherit',
     whiteSpace: 'nowrap',
     flexShrink: 0,
+    transition: 'background 0.15s ease, border-color 0.15s ease',
   },
 };
 
@@ -184,8 +201,8 @@ export default function AssignPromptModal({ isOpen, agent, onClose, onSubmit }) 
                     onChange={(e) => setWorkDir(e.target.value)}
                     placeholder="."
                     required
-                    onFocus={(e) => (e.target.style.borderColor = '#388bfd')}
-                    onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                    onFocus={(e) => { e.target.style.borderColor = '#388bfd'; e.target.style.boxShadow = '0 0 0 3px rgba(56,139,253,0.15)'; }}
+                    onBlur={(e) => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none'; }}
                   />
                   <button
                     type="button"
@@ -205,8 +222,8 @@ export default function AssignPromptModal({ isOpen, agent, onClose, onSubmit }) 
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Describe the task for this agent..."
-                  onFocus={(e) => (e.target.style.borderColor = '#388bfd')}
-                  onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                  onFocus={(e) => { e.target.style.borderColor = '#388bfd'; e.target.style.boxShadow = '0 0 0 3px rgba(56,139,253,0.15)'; }}
+                  onBlur={(e) => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>
