@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { AGENT_VISUAL_STATE, AGENT_ROLE } from '@agent-deck/shared';
 import CharacterSprite from './CharacterSprite';
 import SpeechBubble from './SpeechBubble';
@@ -242,6 +242,23 @@ export default function OfficeFloorPlan({
   onDropAgentOnDesk,
 }) {
   const [hoveredAgent, setHoveredAgent] = useState(null);
+  const containerRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
+  const CANVAS_W = 1200;
+  const CANVAS_H = 440;
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width > 0 && height > 0) {
+        setScale(Math.min(width / CANVAS_W, height / CANVAS_H));
+      }
+    });
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   // Map session IDs to activities for agents
   const getAgentActivity = (agent) => {
@@ -289,11 +306,26 @@ export default function OfficeFloorPlan({
   }, [deskAssignments, agents, activities, getDeskPosition]);
 
   return (
+    <div
+      ref={containerRef}
+      style={{
+        flex: 1,
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: C.floor,
+      }}
+    >
     <div style={{
       position: 'relative',
-      width: 1200,
-      height: 440,
-      margin: '0 auto',
+      width: CANVAS_W,
+      height: CANVAS_H,
+      transform: `scale(${scale})`,
+      transformOrigin: 'center center',
+      flexShrink: 0,
       /* Floor tile pattern */
       background: C.floor,
       backgroundImage: `
@@ -488,6 +520,7 @@ export default function OfficeFloorPlan({
         <span>•</span>
         <span style={{ color: '#484f58' }}>{idleCount} idle</span>
       </div>
+    </div>
     </div>
   );
 }

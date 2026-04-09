@@ -8,15 +8,6 @@ import useAgentInteractions from '../hooks/useAgentInteractions';
 import OfficeChatPanel from './office/OfficeChatPanel';
 import '../styles/sprites.css';
 
-/* ─── colour tokens ─── */
-const C = {
-  floor: '#1a1f27',
-  wall: '#2d333b',
-  wallTop: '#383f49',
-  wallAccent: '#444c56',
-  roomBg: '#161b22',
-};
-
 /* ─── Main OfficeView ─── */
 export default function OfficeView({
   agents,
@@ -43,17 +34,21 @@ export default function OfficeView({
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', flex: 1, padding: 60, color: '#484f58', gap: 16,
+        justifyContent: 'center', flex: 1, gap: 16,
+        background: '#0d1117',
       }}>
-        <div style={{ fontSize: 40 }}>🏢</div>
-        <div style={{ fontSize: 18, fontWeight: 600, color: '#8b949e' }}>
+        <div style={{
+          width: 72, height: 72, borderRadius: 18,
+          background: 'linear-gradient(135deg, #21262d 0%, #161b22 100%)',
+          border: '1px solid #30363d',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 32, boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+        }}>🏢</div>
+        <div style={{ fontSize: 17, fontWeight: 600, color: '#8b949e', letterSpacing: '-0.2px' }}>
           The office is empty
         </div>
-        <div style={{
-          fontSize: 14, color: '#484f58', textAlign: 'center', lineHeight: 1.6,
-        }}>
-          Create a persistent agent to see them in the break room,<br />
-          or spawn a quick session.
+        <div style={{ fontSize: 13, color: '#484f58', textAlign: 'center', lineHeight: 1.7, maxWidth: 320 }}>
+          Create a persistent agent to populate the office,<br />or spawn a quick session.
         </div>
       </div>
     );
@@ -63,95 +58,91 @@ export default function OfficeView({
 
   return (
     <div style={{
-      flex: 1, overflow: 'auto', background: C.floor,
-      padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
+      flex: 1,
+      display: 'flex',
+      overflow: 'hidden',
+      background: '#0d1117',
       minHeight: 0,
     }}>
-      {/* Office header bar */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '6px 12px',
-        background: C.wall, borderRadius: 6,
-        borderLeft: '4px solid #58a6ff',
-        flexShrink: 0,
-      }}>
-        <span style={{ fontSize: 16 }}>🏢</span>
-        <span style={{
-          fontSize: 12, fontWeight: 700, color: '#8b949e',
-          textTransform: 'uppercase', letterSpacing: 2,
-        }}>
-          Agent Office — Floor Plan
-        </span>
-        <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 11, color: '#484f58' }}>
-          {agents.length} agent{agents.length !== 1 ? 's' : ''}
-        </span>
-      </div>
+      {/* ── Left sidebar: agents grouped by role ── */}
+      <AgentCardPanel
+        agents={agents}
+        visualStates={visualStates}
+        onUpdateAgent={onUpdateAgent}
+        onDeleteAgent={onDeleteAgent}
+        onCreateAgent={onCreateAgent}
+      />
 
+      {/* ── Centre: floor plan (fills remaining space) ── */}
       <div style={{
-        display: 'flex', gap: 12, flex: 1, minHeight: 0,
-        alignItems: 'flex-start',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        minWidth: 0,
       }}>
-        {/* Agent Card Panel (left sidebar) */}
-        <AgentCardPanel
+        <OfficeFloorPlan
           agents={agents}
+          sessions={sessions}
+          activities={activities}
           visualStates={visualStates}
-          onUpdateAgent={onUpdateAgent}
+          positions={positions}
+          deskAssignments={deskAssignments}
+          getDeskPosition={getDeskPosition}
+          bubbles={bubbles}
+          onClickIdleAgent={onClickIdleAgent}
+          onClickWorkingAgent={onClickWorkingAgent}
           onDeleteAgent={onDeleteAgent}
-          onCreateAgent={onCreateAgent}
+          onDropAgentOnDesk={onDropAgentOnDesk}
         />
-
-        {/* 2D Floor Plan */}
-        <div style={{
-          flex: 1, overflow: 'auto', display: 'flex',
-          justifyContent: 'center', alignItems: 'flex-start',
-          minHeight: 0,
-        }}>
-          <OfficeFloorPlan
-            agents={agents}
-            sessions={sessions}
-            activities={activities}
-            visualStates={visualStates}
-            positions={positions}
-            deskAssignments={deskAssignments}
-            getDeskPosition={getDeskPosition}
-            bubbles={bubbles}
-            onClickIdleAgent={onClickIdleAgent}
-            onClickWorkingAgent={onClickWorkingAgent}
-            onDeleteAgent={onDeleteAgent}
-            onDropAgentOnDesk={onDropAgentOnDesk}
-          />
-        </div>
-
-        {/* Workflow Board (side panel) */}
-        {hasWorkflows && (
-          <div style={{
-            width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column',
-            border: `2px solid ${C.wall}`, borderRadius: 8, overflow: 'hidden',
-            background: C.roomBg, maxHeight: '100%',
-          }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 12px', background: C.wallTop, borderRadius: '6px 6px 0 0',
-              borderBottom: `2px solid ${C.wallAccent}`,
-            }}>
-              <span style={{ fontSize: 14 }}>🔄</span>
-              <span style={{
-                fontSize: 11, fontWeight: 700, color: '#8b949e',
-                textTransform: 'uppercase', letterSpacing: '1.5px',
-              }}>
-                Workflow Board
-              </span>
-            </div>
-            <div style={{ flex: 1, padding: 12, overflow: 'auto' }}>
-              <WorkflowPanel workflows={workflows} onCancel={onCancelWorkflow} />
-            </div>
-          </div>
-        )}
-
-        {/* Office Chat */}
-        <OfficeChatPanel agents={agents} visualStates={visualStates} />
       </div>
+
+      {/* ── Right panels: workflow board + chat ── */}
+      {(hasWorkflows || true) && (
+        <div style={{
+          width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column',
+          borderLeft: '1px solid #21262d', overflow: 'hidden',
+          background: '#0f1318',
+        }}>
+          {/* Workflow section */}
+          {hasWorkflows && (
+            <div style={{
+              display: 'flex', flexDirection: 'column',
+              borderBottom: '1px solid #21262d', maxHeight: '50%', minHeight: 0,
+            }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 12px',
+                borderBottom: '1px solid #21262d',
+                background: '#161b22', flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 13 }}>⚡</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: '#8b949e',
+                  textTransform: 'uppercase', letterSpacing: '1.5px',
+                }}>Workflows</span>
+                <span style={{
+                  marginLeft: 'auto', fontSize: 10,
+                  color: '#58a6ff', fontWeight: 600,
+                  background: 'rgba(56,139,253,0.1)',
+                  padding: '1px 6px', borderRadius: 8,
+                  border: '1px solid rgba(56,139,253,0.2)',
+                }}>
+                  {workflows.filter(w => !['done','error'].includes(w.state)).length} active
+                </span>
+              </div>
+              <div className="thin-scrollbar" style={{ flex: 1, padding: 10, overflowY: 'auto' }}>
+                <WorkflowPanel workflows={workflows} onCancel={onCancelWorkflow} />
+              </div>
+            </div>
+          )}
+
+          {/* Chat section */}
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <OfficeChatPanel agents={agents} visualStates={visualStates} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
