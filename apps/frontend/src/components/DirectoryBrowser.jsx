@@ -5,7 +5,7 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.6)',
+    background: 'rgba(15, 23, 42, 0.45)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -13,30 +13,30 @@ const styles = {
     backdropFilter: 'blur(4px)',
   },
   modal: {
-    background: '#161b22',
-    border: '1px solid #30363d',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
     borderRadius: 12,
     width: '100%',
     maxWidth: 520,
     padding: 0,
-    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.4)',
+    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.14)',
     display: 'flex',
     flexDirection: 'column',
   },
   header: {
     padding: '12px 16px',
-    borderBottom: '1px solid #30363d',
+    borderBottom: '1px solid #e2e8f0',
     fontSize: 14,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   breadcrumb: {
     display: 'flex',
     alignItems: 'center',
     gap: 2,
     padding: '8px 16px',
-    background: '#0d1117',
-    borderBottom: '1px solid #30363d',
+    background: '#f8fafc',
+    borderBottom: '1px solid #e2e8f0',
     fontSize: 13,
     fontFamily: "'SFMono-Regular', Consolas, monospace",
     flexWrap: 'wrap',
@@ -44,7 +44,7 @@ const styles = {
   breadcrumbSegment: {
     background: 'none',
     border: 'none',
-    color: '#388bfd',
+    color: '#2563eb',
     cursor: 'pointer',
     padding: '2px 4px',
     borderRadius: 4,
@@ -52,22 +52,22 @@ const styles = {
     fontFamily: "'SFMono-Regular', Consolas, monospace",
   },
   breadcrumbSeparator: {
-    color: '#484f58',
+    color: '#94a3b8',
     fontSize: 12,
   },
   driveRow: {
     display: 'flex',
     gap: 6,
     padding: '8px 16px',
-    borderBottom: '1px solid #30363d',
+    borderBottom: '1px solid #e2e8f0',
     flexWrap: 'wrap',
   },
   driveBtn: {
     padding: '4px 10px',
-    background: '#21262d',
-    border: '1px solid #30363d',
+    background: '#f1f5f9',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 12,
     fontFamily: "'SFMono-Regular', Consolas, monospace",
     cursor: 'pointer',
@@ -85,7 +85,7 @@ const styles = {
     padding: '6px 16px',
     background: 'transparent',
     border: 'none',
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 13,
     fontFamily: "'SFMono-Regular', Consolas, monospace",
     cursor: 'pointer',
@@ -93,7 +93,7 @@ const styles = {
     textAlign: 'left',
   },
   dirIcon: {
-    color: '#388bfd',
+    color: '#2563eb',
     fontSize: 14,
   },
   footer: {
@@ -102,13 +102,16 @@ const styles = {
     justifyContent: 'flex-end',
     gap: 10,
     padding: '12px 16px',
-    borderTop: '1px solid #30363d',
+    borderTop: '1px solid #e2e8f0',
+    background: '#f8fafc',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   cancelBtn: {
     padding: '6px 16px',
-    background: '#21262d',
-    color: '#e6edf3',
-    border: '1px solid #30363d',
+    background: '#f1f5f9',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -117,9 +120,9 @@ const styles = {
   },
   selectBtn: {
     padding: '6px 16px',
-    background: '#238636',
+    background: '#16a34a',
     color: '#fff',
-    border: '1px solid rgba(240, 246, 252, 0.1)',
+    border: '1px solid transparent',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -128,18 +131,18 @@ const styles = {
   },
   loading: {
     padding: '20px 16px',
-    color: '#8b949e',
+    color: '#64748b',
     fontSize: 13,
     textAlign: 'center',
   },
   error: {
     padding: '12px 16px',
-    color: '#da3633',
+    color: '#dc2626',
     fontSize: 13,
   },
   empty: {
     padding: '20px 16px',
-    color: '#484f58',
+    color: '#94a3b8',
     fontSize: 13,
     textAlign: 'center',
   },
@@ -250,7 +253,7 @@ export default function DirectoryBrowser({ isOpen, initialPath, onSelect, onCanc
               key={dir}
               style={styles.dirItem}
               onClick={() => loadPath(currentPath + '\\' + dir)}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#21262d'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
               data-testid={`dir-${dir}`}
             >

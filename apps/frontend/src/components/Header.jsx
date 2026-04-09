@@ -25,9 +25,9 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '10px 20px',
-    background: '#161b22',
-    borderBottom: '1px solid #21262d',
-    boxShadow: '0 1px 0 #30363d',
+    background: '#ffffff',
+    borderBottom: '1px solid #e2e8f0',
+    boxShadow: '0 1px 0 #e2e8f0',
     flexShrink: 0,
     gap: 12,
   },
@@ -40,14 +40,14 @@ const styles = {
   title: {
     fontSize: 16,
     fontWeight: 700,
-    color: '#e6edf3',
+    color: '#0f172a',
     letterSpacing: '-0.3px',
     userSelect: 'none',
   },
   divider: {
     width: 1,
     height: 20,
-    background: '#30363d',
+    background: '#e2e8f0',
     flexShrink: 0,
   },
   controls: {
@@ -69,13 +69,13 @@ const styles = {
     transition: 'background 0.15s ease, border-color 0.15s ease',
     lineHeight: 1,
     flexShrink: 0,
-    color: '#8b949e',
+    color: '#64748b',
   },
   viewToggle: {
     display: 'inline-flex',
     borderRadius: 6,
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f1f5f9',
+    border: '1px solid #cbd5e1',
     padding: 2,
     gap: 2,
   },
@@ -90,7 +90,7 @@ const styles = {
     transition: 'all 0.18s ease',
     lineHeight: '18px',
     borderRadius: 4,
-    color: '#8b949e',
+    color: '#64748b',
     whiteSpace: 'nowrap',
   },
   button: {
@@ -99,7 +99,7 @@ const styles = {
     gap: 5,
     padding: '6px 14px',
     color: '#fff',
-    border: '1px solid rgba(240, 246, 252, 0.1)',
+    border: '1px solid transparent',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -132,9 +132,9 @@ export default function Header({ onNewAgent, onNewSession, onStartWorkflow, view
           <button
             style={{
               ...styles.viewBtn,
-              background: view === 'terminal' ? '#238636' : 'transparent',
-              color: view === 'terminal' ? '#fff' : '#8b949e',
-              boxShadow: view === 'terminal' ? '0 1px 4px rgba(0,0,0,0.3)' : 'none',
+              background: view === 'terminal' ? '#2563eb' : 'transparent',
+              color: view === 'terminal' ? '#fff' : '#64748b',
+              boxShadow: view === 'terminal' ? '0 1px 4px rgba(37,99,235,0.25)' : 'none',
             }}
             onClick={() => onViewChange?.('terminal')}
             title="Terminal View"
@@ -144,9 +144,9 @@ export default function Header({ onNewAgent, onNewSession, onStartWorkflow, view
           <button
             style={{
               ...styles.viewBtn,
-              background: view === 'office' ? '#238636' : 'transparent',
-              color: view === 'office' ? '#fff' : '#8b949e',
-              boxShadow: view === 'office' ? '0 1px 4px rgba(0,0,0,0.3)' : 'none',
+              background: view === 'office' ? '#2563eb' : 'transparent',
+              color: view === 'office' ? '#fff' : '#64748b',
+              boxShadow: view === 'office' ? '0 1px 4px rgba(37,99,235,0.25)' : 'none',
             }}
             onClick={() => onViewChange?.('office')}
             title="Office View"
@@ -161,8 +161,8 @@ export default function Header({ onNewAgent, onNewSession, onStartWorkflow, view
         <button
           style={{
             ...styles.button,
-            background: '#8957e5',
-            boxShadow: hoverWorkflow ? '0 0 0 3px rgba(137, 87, 229, 0.3)' : 'none',
+            background: '#7c3aed',
+            boxShadow: hoverWorkflow ? '0 0 0 3px rgba(124, 58, 237, 0.25)' : 'none',
             filter: hoverWorkflow ? 'brightness(1.15)' : 'none',
           }}
           onMouseEnter={() => setHoverWorkflow(true)}
@@ -175,8 +175,8 @@ export default function Header({ onNewAgent, onNewSession, onStartWorkflow, view
         <button
           style={{
             ...styles.button,
-            background: '#1158a6',
-            boxShadow: hoverAgent ? '0 0 0 3px rgba(56, 139, 253, 0.25)' : 'none',
+            background: '#2563eb',
+            boxShadow: hoverAgent ? '0 0 0 3px rgba(37, 99, 235, 0.25)' : 'none',
             filter: hoverAgent ? 'brightness(1.15)' : 'none',
           }}
           onMouseEnter={() => setHoverAgent(true)}
@@ -189,8 +189,8 @@ export default function Header({ onNewAgent, onNewSession, onStartWorkflow, view
         <button
           style={{
             ...styles.button,
-            background: '#238636',
-            boxShadow: hoverSession ? '0 0 0 3px rgba(46, 160, 67, 0.25)' : 'none',
+            background: '#16a34a',
+            boxShadow: hoverSession ? '0 0 0 3px rgba(22, 163, 74, 0.25)' : 'none',
             filter: hoverSession ? 'brightness(1.15)' : 'none',
           }}
           onMouseEnter={() => setHoverSession(true)}
@@ -207,9 +207,9 @@ export default function Header({ onNewAgent, onNewSession, onStartWorkflow, view
         <button
           style={{
             ...styles.iconBtn,
-            color: soundEnabled ? '#e6edf3' : '#484f58',
-            background: hoverSound ? '#21262d' : 'transparent',
-            borderColor: hoverSound ? '#30363d' : 'transparent',
+            color: soundEnabled ? '#0f172a' : '#94a3b8',
+            background: hoverSound ? '#f1f5f9' : 'transparent',
+            borderColor: hoverSound ? '#cbd5e1' : 'transparent',
           }}
           onMouseEnter={() => setHoverSound(true)}
           onMouseLeave={() => setHoverSound(false)}

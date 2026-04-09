@@ -1,9 +1,9 @@
 import React from 'react';
 
 const STATE_CONFIG = {
-  running: { color: '#3fb950', bg: 'rgba(63, 185, 80, 0.12)', label: 'Running', pulse: true },
-  stopped: { color: '#da3633', bg: 'rgba(218, 54, 51, 0.12)', label: 'Stopped', pulse: false },
-  error:   { color: '#d29922', bg: 'rgba(210, 153, 34, 0.12)', label: 'Error',   pulse: false },
+  running: { color: '#16a34a', bg: 'rgba(22, 163, 74, 0.10)', label: 'Running', pulse: true },
+  stopped: { color: '#dc2626', bg: 'rgba(220, 38, 38, 0.10)', label: 'Stopped', pulse: false },
+  error:   { color: '#d97706', bg: 'rgba(217, 119, 6, 0.10)', label: 'Error',   pulse: false },
 };
 
 const ENGINE_CONFIG = {

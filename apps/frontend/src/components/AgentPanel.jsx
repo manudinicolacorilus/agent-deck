@@ -13,17 +13,17 @@ const styles = {
   card: {
     display: 'flex',
     flexDirection: 'column',
-    background: '#161b22',
-    border: '1px solid #30363d',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
     borderRadius: 10,
     overflow: 'hidden',
     minHeight: 360,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.35)',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
     transition: 'box-shadow 0.2s ease, transform 0.2s ease',
     animation: 'fadeSlideIn 0.25s ease both',
   },
   cardHover: {
-    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+    boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
     transform: 'translateY(-1px)',
   },
   header: {
@@ -31,8 +31,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '10px 14px',
-    borderBottom: '1px solid #30363d',
-    background: '#161b22',
+    borderBottom: '1px solid #e2e8f0',
+    background: '#ffffff',
   },
   headerLeft: {
     display: 'flex',
@@ -51,7 +51,7 @@ const styles = {
   label: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -61,8 +61,8 @@ const styles = {
     alignItems: 'center',
     padding: '3px 10px',
     background: 'transparent',
-    color: '#da3633',
-    border: '1px solid #da363344',
+    color: '#dc2626',
+    border: '1px solid #dc262644',
     borderRadius: 5,
     fontSize: 11,
     fontWeight: 600,
@@ -79,7 +79,7 @@ const styles = {
     height: 26,
     padding: 0,
     background: 'transparent',
-    color: '#8b949e',
+    color: '#94a3b8',
     border: '1px solid transparent',
     borderRadius: 5,
     fontSize: 14,
@@ -112,10 +112,10 @@ const styles = {
     alignItems: 'center',
     gap: 16,
     padding: '7px 14px',
-    borderTop: '1px solid #21262d',
-    background: '#0f1318',
+    borderTop: '1px solid #e2e8f0',
+    background: '#f8fafc',
     fontSize: 11,
-    color: '#8b949e',
+    color: '#64748b',
     fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
   },
   footerItem: {
@@ -127,7 +127,7 @@ const styles = {
     textOverflow: 'ellipsis',
   },
   footerLabel: {
-    color: '#484f58',
+    color: '#94a3b8',
   },
   prompt: {
     flex: 1,
@@ -182,9 +182,9 @@ export default function AgentPanel({ session, onKill, onClose, children }) {
           <button
             style={{
               ...styles.killBtn,
-              background: killHover ? 'rgba(218, 54, 51, 0.12)' : 'transparent',
-              borderColor: killHover ? '#da3633' : '#da363344',
-              color: killHover ? '#ff6b68' : '#da3633',
+              background: killHover ? 'rgba(220, 38, 38, 0.08)' : 'transparent',
+              borderColor: killHover ? '#dc2626' : '#dc262644',
+              color: killHover ? '#b91c1c' : '#dc2626',
             }}
             onMouseEnter={() => setKillHover(true)}
             onMouseLeave={() => setKillHover(false)}
@@ -197,9 +197,9 @@ export default function AgentPanel({ session, onKill, onClose, children }) {
             data-testid="close-button"
             style={{
               ...styles.closeBtn,
-              color: closeHover ? '#e6edf3' : '#8b949e',
-              borderColor: closeHover ? '#30363d' : 'transparent',
-              background: closeHover ? '#21262d' : 'transparent',
+              color: closeHover ? '#0f172a' : '#94a3b8',
+              borderColor: closeHover ? '#e2e8f0' : 'transparent',
+              background: closeHover ? '#f1f5f9' : 'transparent',
             }}
             onMouseEnter={() => setCloseHover(true)}
             onMouseLeave={() => setCloseHover(false)}

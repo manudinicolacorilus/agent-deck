@@ -21,7 +21,7 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.65)',
+    background: 'rgba(15, 23, 42, 0.45)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -29,13 +29,13 @@ const styles = {
     backdropFilter: 'blur(6px)',
   },
   modal: {
-    background: '#161b22',
-    border: '1px solid #30363d',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
     borderRadius: 14,
     width: '100%',
     maxWidth: 520,
     padding: 0,
-    boxShadow: '0 24px 64px rgba(0, 0, 0, 0.6)',
+    boxShadow: '0 24px 64px rgba(0, 0, 0, 0.15)',
     animation: 'scaleIn 0.18s ease both',
   },
   header: {
@@ -43,18 +43,18 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid #21262d',
+    borderBottom: '1px solid #e2e8f0',
   },
   headerTitle: {
     fontSize: 15,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
     letterSpacing: '-0.2px',
   },
   closeBtn: {
     background: 'none',
     border: '1px solid transparent',
-    color: '#8b949e',
+    color: '#94a3b8',
     fontSize: 18,
     cursor: 'pointer',
     padding: '4px 8px',
@@ -76,16 +76,16 @@ const styles = {
   label: {
     fontSize: 12,
     fontWeight: 600,
-    color: '#8b949e',
+    color: '#64748b',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
   },
   input: {
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 14,
     fontFamily: 'inherit',
     outline: 'none',
@@ -93,7 +93,7 @@ const styles = {
   },
   hint: {
     fontSize: 12,
-    color: '#8b949e',
+    color: '#64748b',
     lineHeight: 1.5,
   },
   footer: {
@@ -102,16 +102,16 @@ const styles = {
     justifyContent: 'flex-end',
     gap: 8,
     padding: '14px 20px',
-    borderTop: '1px solid #21262d',
-    background: '#0f1318',
+    borderTop: '1px solid #e2e8f0',
+    background: '#f8fafc',
     borderBottomLeftRadius: 14,
     borderBottomRightRadius: 14,
   },
   cancelBtn: {
     padding: '6px 16px',
     background: 'transparent',
-    color: '#8b949e',
-    border: '1px solid #30363d',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -121,9 +121,9 @@ const styles = {
   },
   submitBtn: {
     padding: '6px 18px',
-    background: '#238636',
+    background: '#16a34a',
     color: '#fff',
-    border: '1px solid rgba(240, 246, 252, 0.1)',
+    border: '1px solid transparent',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -142,30 +142,30 @@ const styles = {
     padding: '8px 14px',
     borderRadius: 8,
     cursor: 'pointer',
-    border: '1px solid #30363d',
-    background: '#0d1117',
+    border: '1px solid #cbd5e1',
+    background: '#f8fafc',
     flex: 1,
     transition: 'all 0.15s ease',
   },
   engineOptionSelected: {
-    border: '1px solid #388bfd',
-    background: 'rgba(56, 139, 253, 0.1)',
+    border: '1px solid #2563eb',
+    background: 'rgba(37, 99, 235, 0.06)',
   },
   engineRadio: {
-    accentColor: '#388bfd',
+    accentColor: '#2563eb',
   },
   engineLabel: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   toggleRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
   },
   toggleLeft: {
@@ -176,11 +176,11 @@ const styles = {
   toggleLabel: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   toggleHint: {
     fontSize: 11,
-    color: '#8b949e',
+    color: '#64748b',
   },
   toggleSwitch: {
     width: 40,
@@ -325,13 +325,13 @@ export default function CreateAgentModal({ isOpen, onClose, onSubmit }) {
                     />
                     <div>
                       <span style={styles.engineLabel}>{opt.label}</span>
-                      <div style={{ fontSize: 10, color: '#8b949e', marginTop: 1 }}>{opt.desc}</div>
+                      <div style={{ fontSize: 10, color: '#64748b', marginTop: 1 }}>{opt.desc}</div>
                     </div>
                   </label>
                 ))}
               </div>
               {role === AGENT_ROLE.REVIEWER && (
-                <div style={{ fontSize: 11, color: '#f0883e', marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: '#ea580c', marginTop: 4 }}>
                   Reviewer agents always use Copilot&apos;s built-in /review command
                 </div>
               )}
@@ -350,7 +350,7 @@ export default function CreateAgentModal({ isOpen, onClose, onSubmit }) {
                   aria-label="Toggle yolo mode"
                   style={{
                     ...styles.toggleSwitch,
-                    background: yolo ? '#238636' : '#30363d',
+                    background: yolo ? '#16a34a' : '#cbd5e1',
                   }}
                   onClick={() => setYolo(!yolo)}
                 >

@@ -1,35 +1,35 @@
 /* ─── Design Tokens ─── */
 :root {
   /* Backgrounds */
-  --bg-canvas:    #0d1117;
-  --bg-surface:   #161b22;
-  --bg-overlay:   #21262d;
-  --bg-inset:     #0d1117;
+  --bg-canvas:    #f8fafc;
+  --bg-surface:   #ffffff;
+  --bg-overlay:   #f1f5f9;
+  --bg-inset:     #f8fafc;
 
   /* Borders */
-  --border-subtle:  #21262d;
-  --border-default: #30363d;
-  --border-strong:  #484f58;
+  --border-subtle:  #e2e8f0;
+  --border-default: #cbd5e1;
+  --border-strong:  #94a3b8;
 
   /* Text */
-  --text-primary:   #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted:     #484f58;
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
 
   /* Accents */
-  --accent-blue:    #388bfd;
-  --accent-green:   #2ea043;
-  --accent-green-dark: #238636;
-  --accent-red:     #da3633;
-  --accent-orange:  #f0883e;
-  --accent-purple:  #8957e5;
-  --accent-yellow:  #d29922;
+  --accent-blue:    #2563eb;
+  --accent-green:   #16a34a;
+  --accent-green-dark: #15803d;
+  --accent-red:     #dc2626;
+  --accent-orange:  #ea580c;
+  --accent-purple:  #7c3aed;
+  --accent-yellow:  #d97706;
 
   /* Shadows */
-  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg:  0 16px 48px rgba(0, 0, 0, 0.5);
-  --shadow-xl:  0 24px 64px rgba(0, 0, 0, 0.6);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.10);
+  --shadow-lg:  0 16px 48px rgba(0, 0, 0, 0.14);
+  --shadow-xl:  0 24px 64px rgba(0, 0, 0, 0.18);
 
   /* Radii */
   --radius-sm: 4px;
