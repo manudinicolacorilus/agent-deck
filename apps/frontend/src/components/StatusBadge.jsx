@@ -1,30 +1,31 @@
 import React from 'react';
 
 const STATE_CONFIG = {
-  running: { color: '#2ea043', bg: 'rgba(46, 160, 67, 0.15)', label: 'Running' },
-  stopped: { color: '#da3633', bg: 'rgba(218, 54, 51, 0.15)', label: 'Stopped' },
-  error: { color: '#d29922', bg: 'rgba(210, 153, 34, 0.15)', label: 'Error' },
+  running: { color: '#3fb950', bg: 'rgba(63, 185, 80, 0.12)', label: 'Running', pulse: true },
+  stopped: { color: '#da3633', bg: 'rgba(218, 54, 51, 0.12)', label: 'Stopped', pulse: false },
+  error:   { color: '#d29922', bg: 'rgba(210, 153, 34, 0.12)', label: 'Error',   pulse: false },
 };
 
 const ENGINE_CONFIG = {
-  copilot: { color: '#fff', bg: '#8b5cf6', label: 'Copilot' },
-  claude: { color: '#fff', bg: '#f97316', label: 'Claude' },
+  copilot: { color: '#fff', bg: '#7c3aed', label: 'Copilot' },
+  claude:  { color: '#fff', bg: '#ea580c', label: 'Claude' },
 };
 
 function makeBadgeStyle(color, bg, borderColor) {
   return {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 6,
-    padding: '2px 10px',
-    borderRadius: 12,
-    fontSize: 12,
+    gap: 5,
+    padding: '2px 9px',
+    borderRadius: 20,
+    fontSize: 11,
     fontWeight: 600,
-    fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
+    letterSpacing: '0.02em',
     color,
     background: bg,
-    border: `1px solid ${borderColor || color + '33'}`,
-    lineHeight: '20px',
+    border: `1px solid ${borderColor || color + '30'}`,
+    lineHeight: '18px',
+    userSelect: 'none',
   };
 }
 
@@ -34,11 +35,13 @@ export default function StatusBadge({ state }) {
   return (
     <span style={makeBadgeStyle(config.color, config.bg)}>
       <span style={{
-        width: 8,
-        height: 8,
+        width: 6,
+        height: 6,
         borderRadius: '50%',
         background: config.color,
-        boxShadow: `0 0 6px ${config.color}88`,
+        boxShadow: `0 0 0 0 ${config.color}`,
+        flexShrink: 0,
+        animation: config.pulse ? 'statusDotPulse 2s ease-in-out infinite' : 'none',
       }} />
       {config.label}
     </span>
