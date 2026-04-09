@@ -287,51 +287,55 @@ function AgentCard({ agent, visualState, onEdit, onDelete }) {
       draggable={isIdle}
       onDragStart={isIdle ? handleDragStart : undefined}
       style={{
-        background: C.cardBg,
-        border: `1px solid ${C.border}`,
-        borderLeft: `3px solid ${engineColor}`,
-        borderRadius: 7,
-        padding: '8px 10px',
+        background: `${engineColor}12`,
+        border: `1px solid ${engineColor}33`,
+        borderRadius: 6,
+        padding: '5px 8px',
         cursor: isIdle ? 'grab' : 'default',
-        transition: 'border-color 0.15s, box-shadow 0.15s',
-        opacity: isIdle ? 1 : 0.75,
+        transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
+        opacity: isIdle ? 1 : 0.7,
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = C.borderHover;
+        e.currentTarget.style.background = `${engineColor}22`;
+        e.currentTarget.style.borderColor = `${engineColor}66`;
         e.currentTarget.style.boxShadow = `0 2px 8px rgba(0,0,0,0.3)`;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = C.border;
+        e.currentTarget.style.background = `${engineColor}12`;
+        e.currentTarget.style.borderColor = `${engineColor}33`;
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      {/* Top row: name + status + actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {/* Status dot */}
+      {/* Single row: dot + name + accessories + actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
         <span style={{
-          width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+          width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
           background: status.color,
-          boxShadow: status.label === 'Working' ? `0 0 6px ${C.green}88` : 'none',
+          boxShadow: status.label === 'Working' ? `0 0 5px ${C.green}88` : 'none',
           animation: status.label === 'Working' ? 'statusDotPulse 2s ease-in-out infinite' : 'none',
         }} />
         <span style={{
-          fontSize: 12, fontWeight: 600, color: C.text,
+          fontSize: 11, fontWeight: 600, color: C.text,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
         }}>{agent.name}</span>
-        {/* Accessory icons */}
-        {agent.hat && <span style={{ fontSize: 10 }}>{HAT_OPTIONS.find(h => h.id === agent.hat)?.icon}</span>}
-        {agent.pet && <span style={{ fontSize: 10 }}>{PET_OPTIONS.find(p => p.id === agent.pet)?.icon}</span>}
-        {/* Edit */}
+        {agent.hat && <span style={{ fontSize: 9 }}>{HAT_OPTIONS.find(h => h.id === agent.hat)?.icon}</span>}
+        {agent.pet && <span style={{ fontSize: 9 }}>{PET_OPTIONS.find(p => p.id === agent.pet)?.icon}</span>}
+        {agent.yolo && (
+          <span style={{
+            fontSize: 8, fontWeight: 700, color: '#d29922',
+            background: '#d2992218', border: '1px solid #d2992233',
+            padding: '0px 4px', borderRadius: 8,
+          }}>Y</span>
+        )}
         <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(agent.id); }}
-          style={{ background: 'none', border: 'none', color: C.dimmed, cursor: 'pointer', padding: '1px 3px', fontSize: 11, borderRadius: 3 }}
+          style={{ background: 'none', border: 'none', color: C.dimmed, cursor: 'pointer', padding: '0 2px', fontSize: 10, borderRadius: 3, lineHeight: 1 }}
           onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
           onMouseLeave={(e) => (e.currentTarget.style.color = C.dimmed)}
           title="Edit"
         >✎</button>
-        {/* Delete (idle only) */}
         {isIdle && (
           <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(agent.id); }}
-            style={{ background: 'none', border: 'none', color: C.dimmed, cursor: 'pointer', padding: '1px 3px', fontSize: 11, borderRadius: 3 }}
+            style={{ background: 'none', border: 'none', color: C.dimmed, cursor: 'pointer', padding: '0 2px', fontSize: 11, borderRadius: 3, lineHeight: 1 }}
             onMouseEnter={(e) => (e.currentTarget.style.color = C.red)}
             onMouseLeave={(e) => (e.currentTarget.style.color = C.dimmed)}
             title="Delete"
@@ -339,38 +343,20 @@ function AgentCard({ agent, visualState, onEdit, onDelete }) {
         )}
       </div>
 
-      {/* Bottom row: engine badge + status label */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5 }}>
-        {/* Engine pill */}
+      {/* Sub-row: engine + status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
         <span style={{
-          fontSize: 9, fontWeight: 700, letterSpacing: '0.04em',
+          fontSize: 8, fontWeight: 700, letterSpacing: '0.04em',
           color: engineColor,
-          background: `${engineColor}18`,
-          border: `1px solid ${engineColor}33`,
-          padding: '1px 5px', borderRadius: 10,
           textTransform: 'uppercase',
         }}>
           {ENGINE_LABEL[agent.engine] || agent.engine || 'copilot'}
         </span>
-        {agent.yolo && (
-          <span style={{
-            fontSize: 9, fontWeight: 700, color: '#d29922',
-            background: '#d2992218', border: '1px solid #d2992233',
-            padding: '1px 5px', borderRadius: 10,
-          }}>YOLO</span>
-        )}
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 9, color: status.color, fontWeight: 600 }}>
+        <span style={{ fontSize: 8, color: status.color, fontWeight: 600 }}>
           {status.label}
         </span>
       </div>
-
-      {/* Drag hint */}
-      {isIdle && (
-        <div style={{ fontSize: 9, color: C.dimmed, marginTop: 4, fontStyle: 'italic' }}>
-          drag to desk ↗
-        </div>
-      )}
     </div>
   );
 }
@@ -381,24 +367,24 @@ function RoleSection({ roleKey, agents, visualStates, onEdit, onDelete }) {
   if (agents.length === 0) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {/* Section header */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '5px 8px',
+        display: 'flex', alignItems: 'center', gap: 5,
+        padding: '3px 6px',
         background: `${cfg.color}10`,
         borderLeft: `2px solid ${cfg.color}`,
         borderRadius: '0 4px 4px 0',
-        marginBottom: 2,
+        marginBottom: 1,
       }}>
-        <span style={{ fontSize: 12 }}>{cfg.icon}</span>
+        <span style={{ fontSize: 11 }}>{cfg.icon}</span>
         <span style={{
-          fontSize: 10, fontWeight: 700, color: cfg.color,
+          fontSize: 9, fontWeight: 700, color: cfg.color,
           textTransform: 'uppercase', letterSpacing: '0.08em',
         }}>{cfg.label}</span>
         <span style={{
-          marginLeft: 'auto', fontSize: 10, color: cfg.color,
-          background: `${cfg.color}18`, padding: '0px 5px',
+          marginLeft: 'auto', fontSize: 9, color: cfg.color,
+          background: `${cfg.color}18`, padding: '0px 4px',
           borderRadius: 8, fontWeight: 600,
         }}>{agents.length}</span>
       </div>
@@ -492,25 +478,10 @@ export default function AgentCardPanel({
         >+</button>
       </div>
 
-      {/* Engine legend */}
-      <div style={{
-        display: 'flex', gap: 8, padding: '6px 12px',
-        borderBottom: '1px solid #21262d', background: '#0d1117', flexShrink: 0,
-      }}>
-        {Object.entries(ENGINE_COLOR).map(([id, color]) => (
-          <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: color, display: 'inline-block' }} />
-            <span style={{ fontSize: 9, color: C.dimmed, textTransform: 'capitalize' }}>{ENGINE_LABEL[id]}</span>
-          </div>
-        ))}
-        <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 9, color: C.dimmed }}>◀ border</span>
-      </div>
-
       {/* Grouped card list */}
       <div className="thin-scrollbar" style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
-        padding: '8px 8px', display: 'flex', flexDirection: 'column', gap: 10,
+        padding: '6px 6px', display: 'flex', flexDirection: 'column', gap: 8,
       }}>
         {agents.length === 0 && (
           <div style={{ padding: 20, textAlign: 'center', color: C.dimmed, fontSize: 11, lineHeight: 1.6 }}>

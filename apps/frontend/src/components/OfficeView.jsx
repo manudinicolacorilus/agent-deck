@@ -5,7 +5,6 @@ import OfficeFloorPlan from './office/OfficeFloorPlan';
 import AgentCardPanel from './office/AgentCardPanel';
 import useCharacterPositions from '../hooks/useCharacterPositions';
 import useAgentInteractions from '../hooks/useAgentInteractions';
-import OfficeChatPanel from './office/OfficeChatPanel';
 import '../styles/sprites.css';
 
 /* ─── Main OfficeView ─── */
@@ -97,49 +96,36 @@ export default function OfficeView({
         />
       </div>
 
-      {/* ── Right panels: workflow board + chat ── */}
-      {(hasWorkflows || true) && (
+      {/* ── Right panel: workflows (only when active) ── */}
+      {hasWorkflows && (
         <div style={{
-          width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column',
+          width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column',
           borderLeft: '1px solid #21262d', overflow: 'hidden',
           background: '#0f1318',
         }}>
-          {/* Workflow section */}
-          {hasWorkflows && (
-            <div style={{
-              display: 'flex', flexDirection: 'column',
-              borderBottom: '1px solid #21262d', maxHeight: '50%', minHeight: 0,
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '8px 12px',
+            borderBottom: '1px solid #21262d',
+            background: '#161b22', flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 13 }}>⚡</span>
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: '#8b949e',
+              textTransform: 'uppercase', letterSpacing: '1.5px',
+            }}>Workflows</span>
+            <span style={{
+              marginLeft: 'auto', fontSize: 10,
+              color: '#58a6ff', fontWeight: 600,
+              background: 'rgba(56,139,253,0.1)',
+              padding: '1px 6px', borderRadius: 8,
+              border: '1px solid rgba(56,139,253,0.2)',
             }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 12px',
-                borderBottom: '1px solid #21262d',
-                background: '#161b22', flexShrink: 0,
-              }}>
-                <span style={{ fontSize: 13 }}>⚡</span>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, color: '#8b949e',
-                  textTransform: 'uppercase', letterSpacing: '1.5px',
-                }}>Workflows</span>
-                <span style={{
-                  marginLeft: 'auto', fontSize: 10,
-                  color: '#58a6ff', fontWeight: 600,
-                  background: 'rgba(56,139,253,0.1)',
-                  padding: '1px 6px', borderRadius: 8,
-                  border: '1px solid rgba(56,139,253,0.2)',
-                }}>
-                  {workflows.filter(w => !['done','error'].includes(w.state)).length} active
-                </span>
-              </div>
-              <div className="thin-scrollbar" style={{ flex: 1, padding: 10, overflowY: 'auto' }}>
-                <WorkflowPanel workflows={workflows} onCancel={onCancelWorkflow} />
-              </div>
-            </div>
-          )}
-
-          {/* Chat section */}
-          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            <OfficeChatPanel agents={agents} visualStates={visualStates} />
+              {workflows.filter(w => !['done','error'].includes(w.state)).length} active
+            </span>
+          </div>
+          <div className="thin-scrollbar" style={{ flex: 1, padding: 10, overflowY: 'auto' }}>
+            <WorkflowPanel workflows={workflows} onCancel={onCancelWorkflow} />
           </div>
         </div>
       )}
