@@ -2,6 +2,7 @@ import React from 'react';
 import StatusBadge, { EngineBadge, YoloBadge } from './StatusBadge';
 import ConfirmKillModal from './ConfirmKillModal';
 import useElapsedTime from '../hooks/useElapsedTime';
+import { useThemeColors } from '../hooks/useTheme';
 
 const STATUS_BORDER = {
   running: '#2ea043',
@@ -139,6 +140,7 @@ const styles = {
 };
 
 export default function AgentPanel({ session, onKill, onClose, children }) {
+  const { colors } = useThemeColors();
   const [killHover, setKillHover] = React.useState(false);
   const [closeHover, setCloseHover] = React.useState(false);
   const [cardHover, setCardHover] = React.useState(false);
@@ -165,15 +167,18 @@ export default function AgentPanel({ session, onKill, onClose, children }) {
     <div
       style={{
         ...styles.card,
+        background: colors.cardBg,
+        border: `1px solid ${colors.cardBorder}`,
+        boxShadow: colors.shadow,
         ...(cardHover ? styles.cardHover : {}),
         borderTop: `2px solid ${statusColor}`,
       }}
       onMouseEnter={() => setCardHover(true)}
       onMouseLeave={() => setCardHover(false)}
     >
-      <div style={styles.header}>
+      <div style={{ ...styles.header, background: colors.surface, borderBottom: `1px solid ${colors.border}` }}>
         <div style={styles.headerLeft}>
-          <span style={styles.label}>{session.label || session.id}</span>
+          <span style={{ ...styles.label, color: colors.text }}>{session.label || session.id}</span>
           <StatusBadge state={session.state} />
           {session.engine && <EngineBadge engine={session.engine} />}
           {session.yolo && <YoloBadge />}
@@ -197,9 +202,9 @@ export default function AgentPanel({ session, onKill, onClose, children }) {
             data-testid="close-button"
             style={{
               ...styles.closeBtn,
-              color: closeHover ? '#0f172a' : '#94a3b8',
-              borderColor: closeHover ? '#e2e8f0' : 'transparent',
-              background: closeHover ? '#f1f5f9' : 'transparent',
+              color: closeHover ? colors.text : colors.textMuted,
+              borderColor: closeHover ? colors.border : 'transparent',
+              background: closeHover ? colors.hoverBg : 'transparent',
             }}
             onMouseEnter={() => setCloseHover(true)}
             onMouseLeave={() => setCloseHover(false)}
@@ -220,7 +225,7 @@ export default function AgentPanel({ session, onKill, onClose, children }) {
         )}
       </div>
 
-      <div style={styles.footer}>
+      <div style={{ ...styles.footer, background: colors.bg, borderTop: `1px solid ${colors.border}`, color: colors.textSec }}>
         <span style={styles.footerItem}>
           <span style={styles.footerLabel}>dir:</span>
           {session.workDir || '.'}

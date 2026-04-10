@@ -15,12 +15,16 @@ Built with React, xterm.js, Express, and node-pty (ConPTY on Windows). Command-a
 
 - **Multi-session dashboard** — Spawn and manage multiple agent sessions simultaneously in a responsive grid layout
 - **Real-time terminal** — Full ANSI color support via xterm.js with WebGL rendering
-- **Command-agnostic** — Configure any CLI agent per-session or globally via environment variables
-- **Live streaming** — WebSocket bridge between browser terminals and PTY processes
-- **Session management** — Create, monitor, and kill sessions from the UI
-- **Dark theme** — GitHub-inspired dark interface
+- **Command-agnostic** — Works with GitHub Copilot CLI, Claude Code, or any terminal-based agent
+- **Persistent agents** — Create named agents with roles (Architect, Developer, Reviewer, etc.) stored in SQLite
+- **Workflow orchestration** — Automated Architect → Developer → Reviewer pipeline with revision loops
+- **Activity detection** — Real-time tracking of agent states (thinking, editing, running commands, waiting)
+- **Human intervention** — Pause/resume/abort workflows; send instructions to stuck agents
+- **Mission history** — SQLite-backed workflow history persisted across server restarts
+- **Dark/Light mode** — Toggle between themes, respects OS preference
+- **Office view** — Visual dashboard with agent desk animations and activity indicators
 - **Ring buffer** — 100KB output buffer per session for instant catch-up on reconnect
-- **Auto-reconnect** — WebSocket reconnection with exponential backoff
+- **Watchdog** — Automatic silence detection, STATUS? pings, and STUCK marking
 
 ## Architecture
 
@@ -183,6 +187,21 @@ agent-deck/
 | `GET` | `/api/sessions` | List all sessions |
 | `POST` | `/api/sessions` | Create a new session |
 | `DELETE` | `/api/sessions/:id/kill` | Kill a session |
+| `DELETE` | `/api/sessions/:id/close` | Kill + remove a session |
+| `GET` | `/api/agents` | List persistent agents |
+| `POST` | `/api/agents` | Create a persistent agent |
+| `PUT` | `/api/agents/:id` | Update agent properties |
+| `DELETE` | `/api/agents/:id` | Delete an agent |
+| `POST` | `/api/agents/:id/assign` | Assign a prompt to an agent |
+| `GET` | `/api/workflows` | List active workflows |
+| `POST` | `/api/workflows` | Start a workflow pipeline |
+| `DELETE` | `/api/workflows/:id` | Cancel a workflow |
+| `POST` | `/api/workflows/:id/pause` | Pause a workflow |
+| `POST` | `/api/workflows/:id/resume` | Resume a paused workflow |
+| `POST` | `/api/workflows/:id/abort` | Abort a workflow |
+| `POST` | `/api/workflows/:id/resolve` | Resolve stuck workflow (instruct/reassign/skip) |
+| `GET` | `/api/workflows/history` | Get recent mission history |
+| `GET` | `/api/engines` | List available agent engines |
 
 ### WebSocket Protocol
 
@@ -201,12 +220,14 @@ Connect to `ws://localhost:3001/ws?sessionId=<uuid>`
 |---------------------|---------|-------------|
 | `PORT` | `3001` | Backend server port |
 | `MAX_SESSIONS` | `10` | Maximum concurrent sessions |
-| `COPILOT_CMD_TEMPLATE` | Mock agent | Command template with `{workDir}` and `{prompt}` placeholders |
+| `DB_PATH` | `./data/agent-deck.db` | SQLite database path |
+| `CORS_ORIGINS` | `localhost:5173,3001` | Allowed CORS origins |
 
 ## Tech Stack
 
-- **Frontend:** React 18, xterm.js (WebGL), Vite
-- **Backend:** Express, ws, node-pty
+- **Frontend:** React 19, xterm.js 6 (WebGL), Vite 8
+- **Backend:** Express 5, ws, node-pty, better-sqlite3
+- **Persistence:** SQLite (WAL mode) — agents, missions, stages, messages, agent_logs
 - **Testing:** Vitest
 - **Build:** npm workspaces
 

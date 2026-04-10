@@ -26,14 +26,19 @@ export default class WorkflowManager extends EventEmitter {
   /** @type {NodeJS.Timeout|null} */
   #pollTimer = null;
 
+  /** @type {import('./workflow-store.js').default|null} */
+  #store = null;
+
   /**
    * @param {import('./session-manager.js').default} sessionManager
    * @param {import('./agent-store.js').default} agentStore
+   * @param {import('./workflow-store.js').default} [workflowStore]
    */
-  constructor(sessionManager, agentStore) {
+  constructor(sessionManager, agentStore, workflowStore) {
     super();
     this.#sessionManager = sessionManager;
     this.#agentStore = agentStore;
+    this.#store = workflowStore || null;
 
     // Watch for session exits to advance workflows
     this.#sessionManager.on('exit', ({ sessionId, exitCode }) => {
@@ -45,8 +50,11 @@ export default class WorkflowManager extends EventEmitter {
       this.#onSessionActivity(sessionId, activity);
     });
 
-    // Poll for idle agents to assign queued work
-    this.#pollTimer = setInterval(() => this.#tryAdvanceWaiting(), 3000);
+    // Poll for idle agents to assign queued work + watchdog
+    this.#pollTimer = setInterval(() => {
+      this.#tryAdvanceWaiting();
+      this.#watchdog();
+    }, 3000);
   }
 
   // ------------------------------------------------------------------
@@ -60,7 +68,7 @@ export default class WorkflowManager extends EventEmitter {
    * @param {string} opts.workDir - Working directory for all agents
    * @returns {object} The created workflow
    */
-  start({ prompt, workDir }) {
+  start({ prompt, workDir, maxParallelDevs = 1 }) {
     const id = uuidv4();
     const workflow = {
       id,
@@ -69,6 +77,8 @@ export default class WorkflowManager extends EventEmitter {
       state: WORKFLOW_STATE.PENDING,
       steps: [],
       reviewCycle: 0,
+      maxParallelDevs: Math.max(1, maxParallelDevs),
+      activeDevSessions: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -88,11 +98,21 @@ export default class WorkflowManager extends EventEmitter {
   }
 
   /**
-   * List all workflows.
+   * List all workflows (in-memory active + persisted history).
    * @returns {object[]}
    */
   getAll() {
     return [...this.#workflows.values()].map((wf) => this.#serialize(wf));
+  }
+
+  /**
+   * Get recent mission history from SQLite (last N).
+   * @param {number} [limit=10]
+   * @returns {object[]}
+   */
+  getHistory(limit = 10) {
+    if (!this.#store) return [];
+    return this.#store.getRecent(limit);
   }
 
   /**
@@ -108,6 +128,115 @@ export default class WorkflowManager extends EventEmitter {
     wf.steps.push({ role: 'system', action: 'cancelled', timestamp: new Date().toISOString() });
     this.#emitUpdate(wf);
     return true;
+  }
+
+  /**
+   * Pause a running workflow. The current session keeps running but
+   * the workflow won't advance to the next stage automatically.
+   */
+  pause(id) {
+    const wf = this.#workflows.get(id);
+    if (!wf) return null;
+    if (wf.state === WORKFLOW_STATE.DONE || wf.state === WORKFLOW_STATE.ERROR) return null;
+    wf._stateBeforePause = wf.state;
+    wf.state = WORKFLOW_STATE.PAUSED;
+    wf.updatedAt = new Date().toISOString();
+    wf.steps.push({ role: 'system', action: 'paused', timestamp: new Date().toISOString() });
+    this.#emitUpdate(wf);
+    return this.#serialize(wf);
+  }
+
+  /**
+   * Resume a paused workflow.
+   */
+  resume(id) {
+    const wf = this.#workflows.get(id);
+    if (!wf || wf.state !== WORKFLOW_STATE.PAUSED) return null;
+    wf.state = wf._stateBeforePause || WORKFLOW_STATE.PENDING;
+    delete wf._stateBeforePause;
+    wf.updatedAt = new Date().toISOString();
+    wf.steps.push({ role: 'system', action: 'resumed', timestamp: new Date().toISOString() });
+    this.#emitUpdate(wf);
+    this.#advanceWorkflow(wf);
+    return this.#serialize(wf);
+  }
+
+  /**
+   * Abort a workflow — kill the active session and mark as error.
+   */
+  abort(id) {
+    const wf = this.#workflows.get(id);
+    if (!wf) return null;
+    if (wf.state === WORKFLOW_STATE.DONE || wf.state === WORKFLOW_STATE.ERROR) return null;
+    // Kill any active session
+    if (wf.currentSessionId) {
+      this.#sessionManager.killSession(wf.currentSessionId);
+    }
+    wf.state = WORKFLOW_STATE.ERROR;
+    wf.error = 'Aborted by user';
+    wf.updatedAt = new Date().toISOString();
+    wf.steps.push({ role: 'system', action: 'aborted', timestamp: new Date().toISOString() });
+    this.#emitUpdate(wf);
+    return this.#serialize(wf);
+  }
+
+  /**
+   * Resolve a stuck/blocked workflow with a human decision.
+   * @param {string} id
+   * @param {object} resolution
+   * @param {string} resolution.action - 'instruct' | 'reassign' | 'skip'
+   * @param {string} [resolution.message] - Additional instructions for the agent
+   */
+  resolve(id, { action, message } = {}) {
+    const wf = this.#workflows.get(id);
+    if (!wf) return null;
+    if (wf.state !== WORKFLOW_STATE.STUCK && wf.state !== WORKFLOW_STATE.PAUSED) return null;
+
+    wf.steps.push({
+      role: 'system',
+      action: `resolved_${action}`,
+      message: message || '',
+      timestamp: new Date().toISOString(),
+    });
+
+    switch (action) {
+      case 'instruct':
+        // Send a message to the current session
+        if (wf.currentSessionId) {
+          const session = this.#sessionManager.getSession(wf.currentSessionId);
+          if (session && session.state === SESSION_STATE.RUNNING) {
+            session.pty.write(message + '\n');
+          }
+        }
+        wf.state = wf._stateBeforePause || WORKFLOW_STATE.PENDING;
+        delete wf._stateBeforePause;
+        break;
+      case 'reassign':
+        // Kill current session and let workflow re-dispatch
+        if (wf.currentSessionId) {
+          this.#sessionManager.killSession(wf.currentSessionId);
+        }
+        // Reset to the appropriate waiting state
+        wf.state = wf._stateBeforePause || WORKFLOW_STATE.PENDING;
+        delete wf._stateBeforePause;
+        break;
+      case 'skip':
+        // Skip the current stage and advance
+        if (wf.currentSessionId) {
+          this.#sessionManager.killSession(wf.currentSessionId);
+        }
+        wf.state = WORKFLOW_STATE.DONE;
+        break;
+      default:
+        return null;
+    }
+
+    wf.updatedAt = new Date().toISOString();
+    this.#emitUpdate(wf);
+    if (wf.state !== WORKFLOW_STATE.DONE) {
+      this.#advanceWorkflow(wf);
+    }
+    return this.#serialize(wf);
   }
 
   dispose() {
@@ -696,6 +825,64 @@ export default class WorkflowManager extends EventEmitter {
   }
 
   // ------------------------------------------------------------------
+  // Watchdog: detect stuck sessions
+  // ------------------------------------------------------------------
+
+  /** Silence threshold: 5 minutes with no PTY output → STUCK */
+  static SILENCE_THRESHOLD_MS = 5 * 60 * 1000;
+
+  #watchdog() {
+    const now = Date.now();
+    for (const wf of this.#workflows.values()) {
+      // Only check active workflow states
+      const activeStates = [
+        WORKFLOW_STATE.ARCHITECTING,
+        WORKFLOW_STATE.DEVELOPING,
+        WORKFLOW_STATE.REVISING,
+        WORKFLOW_STATE.REVIEWING,
+      ];
+      if (!activeStates.includes(wf.state)) continue;
+      if (!wf.currentSessionId) continue;
+
+      const session = this.#sessionManager.getSession(wf.currentSessionId);
+      if (!session || session.state !== SESSION_STATE.RUNNING) continue;
+
+      const silenceMs = now - (session.lastDataAt || now);
+      if (silenceMs >= WorkflowManager.SILENCE_THRESHOLD_MS) {
+        // Try sending a STATUS? ping first
+        if (!wf._statusPingSent) {
+          try {
+            session.pty.write('STATUS?\n');
+            wf._statusPingSent = true;
+            console.log(
+              `[workflow ${wf.id.slice(0, 8)}] Sent STATUS? ping to silent session ${wf.currentSessionId.slice(0, 8)} (silent for ${Math.round(silenceMs / 1000)}s)`,
+            );
+          } catch { /* session gone */ }
+        } else {
+          // Already pinged and still silent → mark STUCK
+          console.log(
+            `[workflow ${wf.id.slice(0, 8)}] Marking STUCK — session ${wf.currentSessionId.slice(0, 8)} silent for ${Math.round(silenceMs / 1000)}s after ping`,
+          );
+          wf._stateBeforePause = wf.state;
+          wf.state = WORKFLOW_STATE.STUCK;
+          wf.updatedAt = new Date().toISOString();
+          wf.steps.push({
+            role: 'system',
+            action: 'stuck',
+            message: `Session silent for ${Math.round(silenceMs / 1000)}s`,
+            timestamp: new Date().toISOString(),
+          });
+          wf._statusPingSent = false;
+          this.#emitUpdate(wf);
+        }
+      } else {
+        // Reset ping flag when session is producing output
+        wf._statusPingSent = false;
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------
   // Helpers
   // ------------------------------------------------------------------
 
@@ -784,6 +971,10 @@ export default class WorkflowManager extends EventEmitter {
   }
 
   #emitUpdate(wf) {
+    // Persist to SQLite
+    if (this.#store) {
+      try { this.#store.save(wf); } catch (e) { console.error('Failed to persist workflow:', e.message); }
+    }
     this.emit('update', this.#serialize(wf));
   }
 }

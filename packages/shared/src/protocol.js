@@ -68,6 +68,8 @@ export const WORKFLOW_STATE = {
   REVIEWING: 'reviewing',
   WAITING_REVISION: 'waiting_revision',
   REVISING: 'revising',
+  PAUSED: 'paused',
+  STUCK: 'stuck',
   DONE: 'done',
   ERROR: 'error',
 };
@@ -87,6 +89,10 @@ export const API = {
   AGENT_ASSIGN: (id) => `/api/agents/${id}/assign`,
   WORKFLOWS: '/api/workflows',
   WORKFLOW: (id) => `/api/workflows/${id}`,
+  WORKFLOW_PAUSE: (id) => `/api/workflows/${id}/pause`,
+  WORKFLOW_RESUME: (id) => `/api/workflows/${id}/resume`,
+  WORKFLOW_ABORT: (id) => `/api/workflows/${id}/abort`,
+  WORKFLOW_RESOLVE: (id) => `/api/workflows/${id}/resolve`,
 };
 
 // Defaults

@@ -14,21 +14,7 @@ import useActivityTracker from './hooks/useActivityTracker';
 import useAgentVisualStates from './hooks/useAgentVisualStates';
 import useSoundEffects from './hooks/useSoundEffects';
 import useWorkflows from './hooks/useWorkflows';
-
-const styles = {
-  layout: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-    overflow: 'hidden',
-  },
-  main: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  },
-};
+import useTheme, { ThemeProvider } from './hooks/useTheme';
 
 export default function App() {
   const { sessions, loading, error, createSession, killSession, closeSession } = useAgentSessions();
@@ -37,7 +23,11 @@ export default function App() {
   const activities = useActivityTracker(sessions);
   const visualStates = useAgentVisualStates(agents, sessions, activities);
   const { soundEnabled, toggleSound } = useSoundEffects(activities, visualStates, agents, sessions);
-  const { workflows, startWorkflow, cancelWorkflow } = useWorkflows();
+  const {
+    workflows, startWorkflow, cancelWorkflow,
+    pauseWorkflow, resumeWorkflow, abortWorkflow, resolveWorkflow,
+  } = useWorkflows();
+  const { isDark, toggleTheme, colors, ctx } = useTheme();
 
   const [sessionModalOpen, setSessionModalOpen] = useState(false);
   const [createAgentModalOpen, setCreateAgentModalOpen] = useState(false);
@@ -45,13 +35,11 @@ export default function App() {
   const [assignAgent, setAssignAgent] = useState(null);
   const [view, setView] = useState('terminal');
 
-  // Legacy quick session flow
   const handleCreateSession = useCallback(async (formData) => {
     await createSession(formData);
     setSessionModalOpen(false);
   }, [createSession]);
 
-  // Persistent agent flow
   const handleCreateAgent = useCallback(async (formData) => {
     await createAgent(formData);
     setCreateAgentModalOpen(false);
@@ -75,75 +63,73 @@ export default function App() {
     await closeSession(id);
   }, [closeSession]);
 
-  const handleSelectAgent = useCallback((sessionId) => {
-    setView('terminal');
-  }, []);
-
   const handleClickIdleAgent = useCallback((agent) => {
     setAssignAgent(agent);
   }, []);
 
-  const handleClickWorkingAgent = useCallback((agent) => {
-    setView('terminal');
-  }, []);
-
-  const handleDropAgentOnDesk = useCallback((agentId) => {
-    const agent = agents.find((a) => a.id === agentId);
-    if (agent) setAssignAgent(agent);
-  }, [agents]);
-
   return (
-    <div style={styles.layout}>
-      <Header
-        onNewAgent={() => setCreateAgentModalOpen(true)}
-        onNewSession={() => setSessionModalOpen(true)}
-        onStartWorkflow={() => setWorkflowModalOpen(true)}
-        view={view}
-        onViewChange={setView}
-        soundEnabled={soundEnabled}
-        onToggleSound={toggleSound}
-      />
-      <div style={styles.main}>
-        {view === 'terminal' ? (
-          <AgentGrid sessions={sessions} onKill={handleKill} onClose={handleClose} />
-        ) : (
-          <OfficeView
-            agents={agents}
-            sessions={sessions}
-            activities={activities}
-            visualStates={visualStates}
-            workflows={workflows}
-            onClickIdleAgent={handleClickIdleAgent}
-            onDeleteAgent={deleteAgent}
-            onCreateAgent={() => setCreateAgentModalOpen(true)}
-            onCancelWorkflow={cancelWorkflow}
-          />
-        )}
-      </div>
-      <BottomBar health={health.connected} sessionCount={sessions.length} />
+    <ThemeProvider value={ctx}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden',
+        background: colors.bg, color: colors.text,
+      }}>
+        <Header
+          onNewAgent={() => setCreateAgentModalOpen(true)}
+          onNewSession={() => setSessionModalOpen(true)}
+          onStartWorkflow={() => setWorkflowModalOpen(true)}
+          view={view}
+          onViewChange={setView}
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
+          isDark={isDark}
+          onToggleTheme={toggleTheme}
+        />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {view === 'terminal' ? (
+            <AgentGrid sessions={sessions} onKill={handleKill} onClose={handleClose} />
+          ) : (
+            <OfficeView
+              agents={agents}
+              sessions={sessions}
+              activities={activities}
+              visualStates={visualStates}
+              workflows={workflows}
+              onClickIdleAgent={handleClickIdleAgent}
+              onDeleteAgent={deleteAgent}
+              onCreateAgent={() => setCreateAgentModalOpen(true)}
+              onCancelWorkflow={cancelWorkflow}
+              onPauseWorkflow={pauseWorkflow}
+              onResumeWorkflow={resumeWorkflow}
+              onAbortWorkflow={abortWorkflow}
+              onResolveWorkflow={resolveWorkflow}
+            />
+          )}
+        </div>
+        <BottomBar health={health.connected} sessionCount={sessions.length} />
 
-      <NewAgentModal
-        isOpen={sessionModalOpen}
-        onClose={() => setSessionModalOpen(false)}
-        onSubmit={handleCreateSession}
-      />
-      <CreateAgentModal
-        isOpen={createAgentModalOpen}
-        onClose={() => setCreateAgentModalOpen(false)}
-        onSubmit={handleCreateAgent}
-      />
-      <AssignPromptModal
-        isOpen={!!assignAgent}
-        agent={assignAgent}
-        onClose={() => setAssignAgent(null)}
-        onSubmit={handleAssignPrompt}
-      />
-      <StartWorkflowModal
-        isOpen={workflowModalOpen}
-        onClose={() => setWorkflowModalOpen(false)}
-        onSubmit={handleStartWorkflow}
-        agents={agents}
-      />
-    </div>
+        <NewAgentModal
+          isOpen={sessionModalOpen}
+          onClose={() => setSessionModalOpen(false)}
+          onSubmit={handleCreateSession}
+        />
+        <CreateAgentModal
+          isOpen={createAgentModalOpen}
+          onClose={() => setCreateAgentModalOpen(false)}
+          onSubmit={handleCreateAgent}
+        />
+        <AssignPromptModal
+          isOpen={!!assignAgent}
+          agent={assignAgent}
+          onClose={() => setAssignAgent(null)}
+          onSubmit={handleAssignPrompt}
+        />
+        <StartWorkflowModal
+          isOpen={workflowModalOpen}
+          onClose={() => setWorkflowModalOpen(false)}
+          onSubmit={handleStartWorkflow}
+          agents={agents}
+        />
+      </div>
+    </ThemeProvider>
   );
 }

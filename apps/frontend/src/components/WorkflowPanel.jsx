@@ -10,6 +10,8 @@ const STATE_CONFIG = {
   [WORKFLOW_STATE.REVIEWING]: { label: 'Reviewing', color: '#f0883e', icon: '\uD83D\uDD0D' },
   [WORKFLOW_STATE.WAITING_REVISION]: { label: 'Waiting for Dev (revision)', color: '#f8e3a1', icon: '\u23F3' },
   [WORKFLOW_STATE.REVISING]: { label: 'Revising', color: '#58a6ff', icon: '\uD83D\uDD27' },
+  [WORKFLOW_STATE.PAUSED]: { label: 'Paused', color: '#f59e0b', icon: '\u23F8\uFE0F' },
+  [WORKFLOW_STATE.STUCK]: { label: 'STUCK', color: '#dc2626', icon: '\u26A0\uFE0F' },
   [WORKFLOW_STATE.DONE]: { label: 'Complete', color: '#3fb950', icon: '\u2705' },
   [WORKFLOW_STATE.ERROR]: { label: 'Error', color: '#da3633', icon: '\u274C' },
 };
@@ -21,7 +23,85 @@ const ROLE_COLORS = {
   system: '#3fb950',
 };
 
-function WorkflowCard({ workflow, onCancel }) {
+function EscalationBanner({ workflow, onPause, onResume, onAbort, onResolve }) {
+  const [resolveMsg, setResolveMsg] = useState('');
+  const isStuck = workflow.state === WORKFLOW_STATE.STUCK;
+  const isPaused = workflow.state === WORKFLOW_STATE.PAUSED;
+  const isRunning = ![WORKFLOW_STATE.DONE, WORKFLOW_STATE.ERROR, WORKFLOW_STATE.PAUSED, WORKFLOW_STATE.STUCK].includes(workflow.state);
+
+  const btnStyle = {
+    padding: '4px 10px', fontSize: 11, fontWeight: 600,
+    border: '1px solid', borderRadius: 4, cursor: 'pointer',
+    fontFamily: 'inherit', lineHeight: '18px',
+  };
+
+  return (
+    <div style={{
+      padding: '8px 14px', borderTop: '1px solid #e2e8f0',
+      display: 'flex', flexDirection: 'column', gap: 6,
+      background: (isStuck || isPaused) ? '#fef3c7' : '#f8fafc',
+    }}>
+      {(isStuck || isPaused) && (
+        <div style={{ fontSize: 11, fontWeight: 600, color: isStuck ? '#dc2626' : '#d97706' }}>
+          {isStuck ? 'Agent appears stuck — choose a resolution:' : 'Workflow is paused.'}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {isRunning && (
+          <button style={{ ...btnStyle, color: '#d97706', borderColor: '#fbbf24', background: '#fffbeb' }}
+            onClick={() => onPause?.(workflow.id)}>Pause</button>
+        )}
+        {isPaused && (
+          <button style={{ ...btnStyle, color: '#2563eb', borderColor: '#93c5fd', background: '#eff6ff' }}
+            onClick={() => onResume?.(workflow.id)}>Resume</button>
+        )}
+        {(isStuck || isPaused) && (
+          <>
+            <button style={{ ...btnStyle, color: '#16a34a', borderColor: '#86efac', background: '#f0fdf4' }}
+              onClick={() => onResolve?.(workflow.id, { action: 'reassign', message: '' })}>Reassign</button>
+            <button style={{ ...btnStyle, color: '#64748b', borderColor: '#cbd5e1', background: '#f8fafc' }}
+              onClick={() => onResolve?.(workflow.id, { action: 'skip', message: '' })}>Skip Stage</button>
+          </>
+        )}
+        {(isRunning || isPaused || isStuck) && (
+          <button style={{ ...btnStyle, color: '#dc2626', borderColor: '#fca5a5', background: '#fef2f2' }}
+            onClick={() => onAbort?.(workflow.id)}>Abort</button>
+        )}
+      </div>
+      {(isStuck || isPaused) && (
+        <div style={{ display: 'flex', gap: 4 }}>
+          <input
+            type="text"
+            placeholder="Send instructions to agent..."
+            value={resolveMsg}
+            onChange={(e) => setResolveMsg(e.target.value)}
+            style={{
+              flex: 1, padding: '4px 8px', fontSize: 11, border: '1px solid #cbd5e1',
+              borderRadius: 4, fontFamily: 'inherit', outline: 'none',
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && resolveMsg.trim()) {
+                onResolve?.(workflow.id, { action: 'instruct', message: resolveMsg.trim() });
+                setResolveMsg('');
+              }
+            }}
+          />
+          <button
+            style={{ ...btnStyle, color: '#fff', borderColor: '#2563eb', background: '#2563eb' }}
+            onClick={() => {
+              if (resolveMsg.trim()) {
+                onResolve?.(workflow.id, { action: 'instruct', message: resolveMsg.trim() });
+                setResolveMsg('');
+              }
+            }}
+          >Send</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WorkflowCard({ workflow, onCancel, onPause, onResume, onAbort, onResolve }) {
   const [expanded, setExpanded] = useState(false);
   const config = STATE_CONFIG[workflow.state] || STATE_CONFIG[WORKFLOW_STATE.PENDING];
   const isActive = ![WORKFLOW_STATE.DONE, WORKFLOW_STATE.ERROR].includes(workflow.state);
@@ -190,11 +270,22 @@ function WorkflowCard({ workflow, onCancel }) {
           )}
         </div>
       )}
+
+      {/* Escalation controls */}
+      {expanded && isActive && (
+        <EscalationBanner
+          workflow={workflow}
+          onPause={onPause}
+          onResume={onResume}
+          onAbort={onAbort}
+          onResolve={onResolve}
+        />
+      )}
     </div>
   );
 }
 
-export default function WorkflowPanel({ workflows, onCancel }) {
+export default function WorkflowPanel({ workflows, onCancel, onPause, onResume, onAbort, onResolve }) {
   if (!workflows || workflows.length === 0) return null;
 
   const active = workflows.filter((w) =>
@@ -215,10 +306,12 @@ export default function WorkflowPanel({ workflows, onCancel }) {
         Workflows ({active.length} active)
       </div>
       {active.map((wf) => (
-        <WorkflowCard key={wf.id} workflow={wf} onCancel={onCancel} />
+        <WorkflowCard key={wf.id} workflow={wf} onCancel={onCancel}
+          onPause={onPause} onResume={onResume} onAbort={onAbort} onResolve={onResolve} />
       ))}
       {completed.map((wf) => (
-        <WorkflowCard key={wf.id} workflow={wf} onCancel={onCancel} />
+        <WorkflowCard key={wf.id} workflow={wf} onCancel={onCancel}
+          onPause={onPause} onResume={onResume} onAbort={onAbort} onResolve={onResolve} />
       ))}
     </div>
   );

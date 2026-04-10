@@ -1,0 +1,36 @@
+{
+  "id": "feature-development",
+  "name": "Feature Development",
+  "description": "Full pipeline: Architect → Developer → Reviewer → (loop or done)",
+  "stages": [
+    {
+      "id": "architect",
+      "role": "architect",
+      "prompt_template": "architect",
+      "exit_signals": ["DONE"],
+      "timeout_ms": 300000,
+      "next": "developer"
+    },
+    {
+      "id": "developer",
+      "role": "dev",
+      "prompt_template": "developer",
+      "exit_signals": ["DONE"],
+      "timeout_ms": 600000,
+      "maxParallel": 1,
+      "next": "reviewer"
+    },
+    {
+      "id": "reviewer",
+      "role": "reviewer",
+      "prompt_template": "reviewer",
+      "exit_signals": ["VERDICT: PASS", "VERDICT: FAIL"],
+      "timeout_ms": 300000,
+      "next": {
+        "VERDICT: PASS": "done",
+        "VERDICT: FAIL": "developer"
+      }
+    }
+  ],
+  "max_review_cycles": 3
+}

@@ -108,6 +108,11 @@ export async function assignPrompt(id, { prompt, workDir }) {
 
 // --- Workflows ---
 
+export async function fetchWorkflowHistory(limit = 10) {
+  const response = await fetch(`${BASE_URL}/api/workflows/history?limit=${limit}`);
+  return handleResponse(response);
+}
+
 export async function fetchWorkflows(signal) {
   const response = await fetch(`${BASE_URL}/api/workflows`, { signal });
   return handleResponse(response);
@@ -130,6 +135,36 @@ export async function fetchWorkflow(id) {
 export async function cancelWorkflow(id) {
   const response = await fetch(`${BASE_URL}/api/workflows/${id}`, {
     method: 'DELETE',
+  });
+  return handleResponse(response);
+}
+
+export async function pauseWorkflow(id) {
+  const response = await fetch(`${BASE_URL}/api/workflows/${id}/pause`, {
+    method: 'POST',
+  });
+  return handleResponse(response);
+}
+
+export async function resumeWorkflow(id) {
+  const response = await fetch(`${BASE_URL}/api/workflows/${id}/resume`, {
+    method: 'POST',
+  });
+  return handleResponse(response);
+}
+
+export async function abortWorkflow(id) {
+  const response = await fetch(`${BASE_URL}/api/workflows/${id}/abort`, {
+    method: 'POST',
+  });
+  return handleResponse(response);
+}
+
+export async function resolveWorkflow(id, { action, message }) {
+  const response = await fetch(`${BASE_URL}/api/workflows/${id}/resolve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, message }),
   });
   return handleResponse(response);
 }

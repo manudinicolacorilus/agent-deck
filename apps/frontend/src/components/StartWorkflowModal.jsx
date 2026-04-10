@@ -162,9 +162,31 @@ const ROLE_COLORS = {
   [AGENT_ROLE.REVIEWER]: '#ea580c',
 };
 
+const WORKFLOW_TEMPLATES = [
+  {
+    id: 'feature-development',
+    name: 'Feature Development',
+    description: 'Architect \u2192 Dev \u2192 Review \u2192 Done (with revision loop)',
+    stages: ['architect', 'dev', 'reviewer'],
+  },
+  {
+    id: 'bug-fix',
+    name: 'Bug Fix',
+    description: 'Dev \u2192 Review \u2192 Done (skip architecture)',
+    stages: ['dev', 'reviewer'],
+  },
+  {
+    id: 'code-review',
+    name: 'Code Review Only',
+    description: 'Review existing changes with multi-model feedback',
+    stages: ['reviewer'],
+  },
+];
+
 export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }) {
   const [prompt, setPrompt] = useState('');
   const [workDir, setWorkDir] = useState('.');
+  const [template, setTemplate] = useState('feature-development');
   const [browseOpen, setBrowseOpen] = useState(false);
   const textareaRef = useRef(null);
 
@@ -172,6 +194,7 @@ export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }
     if (isOpen) {
       setPrompt('');
       setWorkDir('.');
+      setTemplate('feature-development');
       setTimeout(() => textareaRef.current?.focus(), 50);
     }
   }, [isOpen]);
@@ -191,7 +214,7 @@ export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!canStart) return;
-    onSubmit({ prompt, workDir });
+    onSubmit({ prompt, workDir, template });
   };
 
   const handleOverlayClick = (e) => {
@@ -231,6 +254,35 @@ export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }
 
           <form onSubmit={handleSubmit}>
             <div style={styles.body}>
+              {/* Workflow template selector */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={styles.label}>Workflow Template</label>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {WORKFLOW_TEMPLATES.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      style={{
+                        padding: '8px 14px',
+                        background: template === t.id ? '#7c3aed' : '#f8fafc',
+                        color: template === t.id ? '#fff' : '#0f172a',
+                        border: `1px solid ${template === t.id ? '#7c3aed' : '#cbd5e1'}`,
+                        borderRadius: 6, fontSize: 12, fontWeight: 600,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onClick={() => setTemplate(t.id)}
+                      title={t.description}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>
+                  {WORKFLOW_TEMPLATES.find(t => t.id === template)?.description}
+                </div>
+              </div>
+
               {/* Pipeline visualization */}
               <div style={styles.pipeline}>
                 <div style={{

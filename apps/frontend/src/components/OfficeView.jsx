@@ -1,18 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { AGENT_ROLE, AGENT_VISUAL_STATE } from '@agent-deck/shared';
 import WorkflowPanel from './WorkflowPanel';
+import MissionHistory from './MissionHistory';
 import useElapsedTime from '../hooks/useElapsedTime';
-
-/* ─── Design tokens ──────────────────────────────────────────── */
-const T = {
-  bg:      '#f8fafc',
-  surface: '#ffffff',
-  border:  '#e2e8f0',
-  text:    '#0f172a',
-  muted:   '#475569',
-  dimmed:  '#94a3b8',
-  hover:   '#f1f5f9',
-};
+import { useThemeColors } from '../hooks/useTheme';
 
 const STATUS = {
   working: { border: '#0d9488', pill: '#ccfbf1', pillText: '#0f766e', dot: '#0d9488', label: 'Working' },
@@ -68,6 +59,8 @@ function deriveStatus(agent, visualState, sessions) {
 
 /* ─── Agent Card ─────────────────────────────────────────────── */
 function AgentCard({ agent, session, activity, status, onAssign, onDelete }) {
+  const { colors } = useThemeColors();
+  const T = { bg: colors.bg, surface: colors.surface, border: colors.border, text: colors.text, muted: colors.textSec, dimmed: colors.textMuted, hover: colors.hoverBg };
   const sc = STATUS[status];
   const rc = ROLE_CONFIG[agent.role];
   const ec = ENGINE_CONFIG[agent.engine];
@@ -188,6 +181,8 @@ function AgentCard({ agent, session, activity, status, onAssign, onDelete }) {
 
 /* ─── Left Sidebar ───────────────────────────────────────────── */
 function RoleSidebar({ agents, sessions, visualStates, activeFilter, onFilterChange, onCreateAgent }) {
+  const { colors } = useThemeColors();
+  const T = { bg: colors.bg, surface: colors.surface, border: colors.border, text: colors.text, muted: colors.textSec, dimmed: colors.textMuted, hover: colors.hoverBg };
   const grouped = useMemo(() => {
     const map = {};
     for (const role of ROLE_ORDER) map[role] = [];
@@ -327,6 +322,8 @@ function RoleSidebar({ agents, sessions, visualStates, activeFilter, onFilterCha
 
 /* ─── Empty state ────────────────────────────────────────────── */
 function EmptyState({ onCreateAgent }) {
+  const { colors } = useThemeColors();
+  const T = { bg: colors.bg, surface: colors.surface, border: colors.border, text: colors.text, muted: colors.textSec, dimmed: colors.textMuted, hover: colors.hoverBg };
   return (
     <div style={{
       flex: 1, display: 'flex', flexDirection: 'column',
@@ -366,7 +363,16 @@ export default function OfficeView({
   onDeleteAgent,
   onCreateAgent,
   onCancelWorkflow,
+  onPauseWorkflow,
+  onResumeWorkflow,
+  onAbortWorkflow,
+  onResolveWorkflow,
 }) {
+  const { colors } = useThemeColors();
+  const T = {
+    bg: colors.bg, surface: colors.surface, border: colors.border,
+    text: colors.text, muted: colors.textSec, dimmed: colors.textMuted, hover: colors.hoverBg,
+  };
   const [filter, setFilter] = useState('all');
 
   /* Enrich agents with derived status + session */
@@ -517,22 +523,22 @@ export default function OfficeView({
         </div>
       </div>
 
-      {/* ── Right panel: workflows ── */}
-      {hasWorkflows && (
+      {/* ── Right panel: workflows + mission history ── */}
+      <div style={{
+        width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column',
+        borderLeft: `1px solid ${T.border}`, overflow: 'hidden',
+        background: T.surface,
+      }}>
         <div style={{
-          width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column',
-          borderLeft: `1px solid ${T.border}`, overflow: 'hidden',
-          background: T.surface,
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '10px 14px', borderBottom: `1px solid ${T.border}`,
+          background: T.bg, flexShrink: 0,
         }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '10px 14px', borderBottom: `1px solid ${T.border}`,
-            background: T.bg, flexShrink: 0,
-          }}>
-            <span style={{ fontSize: 13 }}>⚡</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '1.2px' }}>
-              Workflows
-            </span>
+          <span style={{ fontSize: 13 }}>⚡</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '1.2px' }}>
+            Workflows
+          </span>
+          {hasWorkflows && (
             <span style={{
               marginLeft: 'auto', fontSize: 10, color: '#2563eb', fontWeight: 600,
               background: 'rgba(37,99,235,0.07)', padding: '1px 6px',
@@ -540,12 +546,19 @@ export default function OfficeView({
             }}>
               {workflows.filter(w => !['done', 'error'].includes(w.state)).length} active
             </span>
-          </div>
-          <div className="thin-scrollbar" style={{ flex: 1, padding: 10, overflowY: 'auto' }}>
-            <WorkflowPanel workflows={workflows} onCancel={onCancelWorkflow} />
+          )}
+        </div>
+        <div className="thin-scrollbar" style={{ flex: 1, padding: 10, overflowY: 'auto' }}>
+          {hasWorkflows && (
+            <WorkflowPanel workflows={workflows} onCancel={onCancelWorkflow}
+              onPause={onPauseWorkflow} onResume={onResumeWorkflow}
+              onAbort={onAbortWorkflow} onResolve={onResolveWorkflow} />
+          )}
+          <div style={{ marginTop: hasWorkflows ? 12 : 0 }}>
+            <MissionHistory />
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

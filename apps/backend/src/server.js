@@ -8,6 +8,8 @@ import WorkflowManager from './workflow-manager.js';
 import setupWebSocket from './ws-handler.js';
 import { listDirectories, getDriveRoots } from './browse-handler.js';
 import { API } from '@agent-deck/shared';
+import openDatabase from './db/schema.js';
+import WorkflowStore from './workflow-store.js';
 
 /**
  * Create a fresh SessionManager instance (useful for testing).
@@ -206,6 +208,41 @@ function buildApp(sessionManager, agentStore, workflowManager) {
     res.json({ cancelled: true });
   });
 
+  // --- Workflow control: pause / resume / abort / resolve ---------------
+  app.post('/api/workflows/:id/pause', (req, res) => {
+    const result = workflowManager.pause(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Workflow not found or not pausable' });
+    res.json(result);
+  });
+
+  app.post('/api/workflows/:id/resume', (req, res) => {
+    const result = workflowManager.resume(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Workflow not found or not paused' });
+    res.json(result);
+  });
+
+  app.post('/api/workflows/:id/abort', (req, res) => {
+    const result = workflowManager.abort(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Workflow not found or already finished' });
+    res.json(result);
+  });
+
+  // --- Workflow history (persisted in SQLite) ---------------------------
+  app.get('/api/workflows/history', (_req, res) => {
+    const limit = parseInt(_req.query.limit, 10) || 10;
+    res.json(workflowManager.getHistory(limit));
+  });
+
+  app.post('/api/workflows/:id/resolve', (req, res) => {
+    const { action, message } = req.body;
+    if (!action || !['instruct', 'reassign', 'skip'].includes(action)) {
+      return res.status(400).json({ error: 'action must be instruct, reassign, or skip' });
+    }
+    const result = workflowManager.resolve(req.params.id, { action, message });
+    if (!result) return res.status(404).json({ error: 'Workflow not found or not stuck/paused' });
+    res.json(result);
+  });
+
   return app;
 }
 
@@ -217,8 +254,13 @@ function buildApp(sessionManager, agentStore, workflowManager) {
  */
 export function startServer(sessionManager, agentStore) {
   sessionManager = sessionManager || createSessionManager();
-  agentStore = agentStore || new AgentStore();
-  const workflowManager = new WorkflowManager(sessionManager, agentStore);
+  let db;
+  if (!agentStore) {
+    db = openDatabase();
+    agentStore = new AgentStore(db);
+  }
+  const workflowStore = db ? new WorkflowStore(db) : null;
+  const workflowManager = new WorkflowManager(sessionManager, agentStore, workflowStore);
   const app = buildApp(sessionManager, agentStore, workflowManager);
   const server = http.createServer(app);
 
@@ -232,7 +274,7 @@ export function startServer(sessionManager, agentStore) {
     }
   });
 
-  setupWebSocket(server, sessionManager);
+  setupWebSocket(server, sessionManager, workflowManager);
 
   return new Promise((resolve) => {
     server.listen(config.PORT, () => {
