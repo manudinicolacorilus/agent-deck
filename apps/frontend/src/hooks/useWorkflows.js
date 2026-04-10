@@ -57,5 +57,30 @@ export default function useWorkflows() {
     await refresh();
   }, [refresh]);
 
-  return { workflows, loading, error, startWorkflow, cancelWorkflow, refresh };
+  const pauseWorkflow = useCallback(async (id) => {
+    await api.pauseWorkflow(id);
+    await refresh();
+  }, [refresh]);
+
+  const resumeWorkflow = useCallback(async (id) => {
+    await api.resumeWorkflow(id);
+    await refresh();
+  }, [refresh]);
+
+  const abortWorkflow = useCallback(async (id) => {
+    await api.abortWorkflow(id);
+    await refresh();
+  }, [refresh]);
+
+  const resolveWorkflow = useCallback(async (id, resolution) => {
+    await api.resolveWorkflow(id, resolution);
+    await refresh();
+  }, [refresh]);
+
+  return {
+    workflows, loading, error,
+    startWorkflow, cancelWorkflow,
+    pauseWorkflow, resumeWorkflow, abortWorkflow, resolveWorkflow,
+    refresh,
+  };
 }

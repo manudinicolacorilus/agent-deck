@@ -17,7 +17,7 @@ import url from 'node:url';
  * @param {import('./session-manager.js').default} sessionManager
  * @returns {WebSocketServer}
  */
-export default function setupWebSocket(server, sessionManager) {
+export default function setupWebSocket(server, sessionManager, workflowManager) {
   const wss = new WebSocketServer({ server, path: '/ws' });
 
   // Track WS clients per session for broadcasting session_closed
@@ -35,6 +35,18 @@ export default function setupWebSocket(server, sessionManager) {
       sessionClients.delete(sessionId);
     }
   });
+
+  // Broadcast workflow updates to all connected clients
+  if (workflowManager) {
+    workflowManager.on('update', (workflow) => {
+      const msg = JSON.stringify({ type: WS_MSG.WORKFLOW_UPDATE, workflow });
+      for (const client of wss.clients) {
+        if (client.readyState === client.OPEN) {
+          client.send(msg);
+        }
+      }
+    });
+  }
 
   wss.on('connection', (ws, req) => {
     // ---- resolve the target session -----------------------------------
