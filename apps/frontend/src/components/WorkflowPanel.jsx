@@ -28,25 +28,25 @@ function WorkflowCard({ workflow, onCancel }) {
 
   return (
     <div style={{
-      background: '#161b22',
-      border: `1px solid ${isActive ? config.color + '44' : '#30363d'}`,
+      background: '#ffffff',
+      border: `1px solid ${isActive ? config.color + '44' : '#e2e8f0'}`,
       borderRadius: 8,
       overflow: 'hidden',
-      boxShadow: isActive ? `0 0 12px ${config.color}11` : 'none',
+      boxShadow: isActive ? `0 0 12px ${config.color}11` : '0 1px 3px rgba(0,0,0,0.06)',
     }}>
       {/* Header */}
       <div
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '10px 14px', cursor: 'pointer',
-          background: isActive ? `${config.color}08` : 'transparent',
+          background: isActive ? `${config.color}08` : '#f8fafc',
         }}
         onClick={() => setExpanded(!expanded)}
       >
         <span style={{ fontSize: 16 }}>{config.icon}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontSize: 12, fontWeight: 600, color: '#e6edf3',
+            fontSize: 12, fontWeight: 600, color: '#0f172a',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>
             {workflow.prompt.slice(0, 60)}{workflow.prompt.length > 60 ? '...' : ''}
@@ -59,7 +59,7 @@ function WorkflowCard({ workflow, onCancel }) {
               {config.label}
             </span>
             {workflow.reviewCycle > 0 && (
-              <span style={{ fontSize: 10, color: '#8b949e' }}>
+              <span style={{ fontSize: 10, color: '#94a3b8' }}>
                 (review cycle {workflow.reviewCycle})
               </span>
             )}
@@ -68,19 +68,19 @@ function WorkflowCard({ workflow, onCancel }) {
         {isActive && (
           <button
             style={{
-              background: 'none', border: 'none', color: '#484f58',
+              background: 'none', border: 'none', color: '#94a3b8',
               cursor: 'pointer', fontSize: 11, padding: '2px 6px',
               borderRadius: 4, fontFamily: 'inherit',
             }}
             title="Cancel workflow"
             onClick={(e) => { e.stopPropagation(); onCancel?.(workflow.id); }}
-            onMouseEnter={(e) => (e.target.style.color = '#da3633')}
-            onMouseLeave={(e) => (e.target.style.color = '#484f58')}
+            onMouseEnter={(e) => (e.target.style.color = '#dc2626')}
+            onMouseLeave={(e) => (e.target.style.color = '#94a3b8')}
           >
             cancel
           </button>
         )}
-        <span style={{ color: '#484f58', fontSize: 12 }}>
+        <span style={{ color: '#94a3b8', fontSize: 12 }}>
           {expanded ? '\u25B2' : '\u25BC'}
         </span>
       </div>
@@ -88,7 +88,7 @@ function WorkflowCard({ workflow, onCancel }) {
       {/* Progress bar */}
       {isActive && (
         <div style={{
-          height: 2, background: '#21262d',
+          height: 2, background: '#e2e8f0',
         }}>
           <div style={{
             height: '100%', background: config.color,
@@ -100,13 +100,13 @@ function WorkflowCard({ workflow, onCancel }) {
       {/* Expanded steps */}
       {expanded && (
         <div style={{
-          padding: '10px 14px', borderTop: '1px solid #30363d',
+          padding: '10px 14px', borderTop: '1px solid #e2e8f0',
           display: 'flex', flexDirection: 'column', gap: 6,
         }}>
           {/* Pipeline visualization */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 4,
-            fontSize: 10, color: '#8b949e', marginBottom: 4,
+            fontSize: 10, color: '#94a3b8', marginBottom: 4,
           }}>
             <span style={{ color: ROLE_COLORS[AGENT_ROLE.ARCHITECT] }}>Architect</span>
             <span>&rarr;</span>
@@ -114,12 +114,12 @@ function WorkflowCard({ workflow, onCancel }) {
             <span>&rarr;</span>
             <span style={{ color: ROLE_COLORS[AGENT_ROLE.REVIEWER] }}>Review (/review)</span>
             <span>&harr;</span>
-            <span style={{ color: '#3fb950' }}>Done</span>
+            <span style={{ color: '#16a34a' }}>Done</span>
           </div>
 
           {/* Steps timeline */}
           {workflow.steps.map((step, i) => {
-            const roleColor = ROLE_COLORS[step.role] || '#8b949e';
+            const roleColor = ROLE_COLORS[step.role] || '#94a3b8';
             return (
               <div key={i} style={{
                 display: 'flex', alignItems: 'flex-start', gap: 8,
@@ -139,33 +139,33 @@ function WorkflowCard({ workflow, onCancel }) {
                       {step.role}
                     </span>
                     {step.agentName && (
-                      <span style={{ fontSize: 10, color: '#e6edf3' }}>
+                      <span style={{ fontSize: 10, color: '#0f172a' }}>
                         {step.agentName}
                       </span>
                     )}
-                    <span style={{ fontSize: 9, color: '#484f58' }}>
+                    <span style={{ fontSize: 9, color: '#94a3b8' }}>
                       {step.action}
                     </span>
                   </div>
                   {step.models && (
-                    <div style={{ fontSize: 9, color: '#8b949e', marginTop: 2 }}>
+                    <div style={{ fontSize: 9, color: '#64748b', marginTop: 2 }}>
                       Models: {step.models.join(', ')}
                     </div>
                   )}
                   {step.message && (
-                    <div style={{ fontSize: 10, color: '#3fb950', marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: '#16a34a', marginTop: 2 }}>
                       {step.message}
                     </div>
                   )}
-                  <div style={{ fontSize: 9, color: '#484f58', marginTop: 1 }}>
+                  <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 1 }}>
                     {new Date(step.timestamp).toLocaleTimeString()}
                     {step.completedAt && ` \u2192 ${new Date(step.completedAt).toLocaleTimeString()}`}
                   </div>
                 </div>
                 {step.hasOutput && (
                   <span style={{
-                    fontSize: 9, color: '#3fb950', padding: '1px 4px',
-                    background: '#3fb95011', borderRadius: 3,
+                    fontSize: 9, color: '#16a34a', padding: '1px 4px',
+                    background: 'rgba(22,163,74,0.08)', borderRadius: 3,
                   }}>
                     output
                   </span>
@@ -175,15 +175,15 @@ function WorkflowCard({ workflow, onCancel }) {
           })}
 
           {workflow.steps.length === 0 && (
-            <div style={{ fontSize: 11, color: '#484f58', fontStyle: 'italic' }}>
+            <div style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
               Waiting to start...
             </div>
           )}
 
           {workflow.error && (
             <div style={{
-              fontSize: 11, color: '#f85149', padding: '6px 8px',
-              background: '#da363311', borderRadius: 4,
+              fontSize: 11, color: '#dc2626', padding: '6px 8px',
+              background: 'rgba(220,38,38,0.06)', borderRadius: 4,
             }}>
               {workflow.error}
             </div>
@@ -209,7 +209,7 @@ export default function WorkflowPanel({ workflows, onCancel }) {
       display: 'flex', flexDirection: 'column', gap: 8,
     }}>
       <div style={{
-        fontSize: 10, color: '#484f58', fontWeight: 600,
+        fontSize: 10, color: '#94a3b8', fontWeight: 600,
         textTransform: 'uppercase', letterSpacing: 1, padding: '0 2px',
       }}>
         Workflows ({active.length} active)

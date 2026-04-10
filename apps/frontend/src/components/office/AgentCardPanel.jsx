@@ -2,84 +2,85 @@ import React, { useState, useEffect } from 'react';
 import { AGENT_ROLE, AGENT_VISUAL_STATE } from '@agent-deck/shared';
 import * as api from '../../lib/api.js';
 
-/* ─── colour tokens ─── */
+/* ─── Engine colour tokens ─── */
+const ENGINE_COLOR = {
+  copilot: '#388bfd',   // blue
+  claude:  '#ea580c',   // orange
+};
+const ENGINE_LABEL = {
+  copilot: 'Copilot',
+  claude:  'Claude',
+};
+
+/* ─── Role config ─── */
+const ROLE_CONFIG = {
+  [AGENT_ROLE.ARCHITECT]:    { label: 'Architect',    color: '#a78bfa', icon: '🏗️' },
+  [AGENT_ROLE.SUPER_MASTER]: { label: 'Super-Master', color: '#e879f9', icon: '👑' },
+  [AGENT_ROLE.MASTER]:       { label: 'Master',       color: '#22d3ee', icon: '🎯' },
+  [AGENT_ROLE.EXPLORER]:     { label: 'Explorer',     color: '#34d399', icon: '🔭' },
+  [AGENT_ROLE.DEV]:          { label: 'Developer',    color: '#58a6ff', icon: '💻' },
+  [AGENT_ROLE.INTEGRATOR]:   { label: 'Integrator',   color: '#fbbf24', icon: '🔗' },
+  [AGENT_ROLE.TESTER]:       { label: 'Tester',       color: '#f87171', icon: '🧪' },
+  [AGENT_ROLE.REVIEWER]:     { label: 'Reviewer',     color: '#f0883e', icon: '🔍' },
+  [AGENT_ROLE.RELEASER]:     { label: 'Releaser',     color: '#c084fc', icon: '🚀' },
+  general:                   { label: 'General',      color: '#6e7681', icon: '🤖' },
+};
+
 const C = {
-  bg: '#161b22',
-  cardBg: '#0d1117',
-  cardBorder: '#30363d',
-  cardBorderHover: '#484f58',
-  headerBg: '#383f49',
-  headerBorder: '#444c56',
-  text: '#e6edf3',
-  muted: '#8b949e',
-  dimmed: '#484f58',
-  blue: '#58a6ff',
-  purple: '#d2a8ff',
-  orange: '#f0883e',
-  green: '#3fb950',
-  red: '#da3633',
-  selectBg: '#0d1117',
-  selectBorder: '#30363d',
-};
-
-const ROLE_COLOR = {
-  [AGENT_ROLE.ARCHITECT]: C.purple,
-  [AGENT_ROLE.DEV]: C.blue,
-  [AGENT_ROLE.REVIEWER]: C.orange,
-};
-
-const ROLE_LABEL = {
-  [AGENT_ROLE.ARCHITECT]: 'Architect',
-  [AGENT_ROLE.DEV]: 'Developer',
-  [AGENT_ROLE.REVIEWER]: 'Reviewer',
+  bg:          '#f8fafc',
+  surface:     '#ffffff',
+  cardBg:      '#ffffff',
+  border:      '#e2e8f0',
+  borderHover: '#cbd5e1',
+  text:        '#0f172a',
+  muted:       '#475569',
+  dimmed:      '#94a3b8',
+  green:       '#16a34a',
+  red:         '#dc2626',
+  blue:        '#2563eb',
+  selectBg:    '#f8fafc',
 };
 
 function getAgentStatus(visualState) {
   if (!visualState) return { label: 'Idle', color: C.dimmed };
-  if (visualState === AGENT_VISUAL_STATE.WORKING_AT_DESK
-    || visualState === AGENT_VISUAL_STATE.THINKING_AT_DESK) {
-    return { label: 'Working', color: C.green };
-  }
-  if (visualState.includes('walking')) {
-    return { label: 'Walking', color: C.blue };
-  }
+  if (
+    visualState === AGENT_VISUAL_STATE.WORKING_AT_DESK ||
+    visualState === AGENT_VISUAL_STATE.THINKING_AT_DESK
+  ) return { label: 'Working', color: C.green };
+  if (visualState.includes('walking')) return { label: 'Moving', color: '#58a6ff' };
   return { label: 'Idle', color: C.dimmed };
 }
 
 const SKIN_TONES = ['#f4c794', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
-
 const HAT_OPTIONS = [
-  { id: null, label: 'None', icon: '—' },
-  { id: 'hardhat', label: 'Hard Hat', icon: '⛑️' },
-  { id: 'tophat', label: 'Top Hat', icon: '🎩' },
-  { id: 'beanie', label: 'Beanie', icon: '🧢' },
-  { id: 'crown', label: 'Crown', icon: '👑' },
-  { id: 'wizard', label: 'Wizard', icon: '🧙' },
+  { id: null,       label: 'None',     icon: '—' },
+  { id: 'hardhat',  label: 'Hard Hat', icon: '⛑️' },
+  { id: 'tophat',   label: 'Top Hat',  icon: '🎩' },
+  { id: 'beanie',   label: 'Beanie',   icon: '🧢' },
+  { id: 'crown',    label: 'Crown',    icon: '👑' },
+  { id: 'wizard',   label: 'Wizard',   icon: '🧙' },
 ];
-
 const PET_OPTIONS = [
-  { id: null, label: 'None', icon: '—' },
-  { id: 'cat', label: 'Cat', icon: '🐱' },
-  { id: 'dog', label: 'Dog', icon: '🐶' },
-  { id: 'bird', label: 'Bird', icon: '🐦' },
+  { id: null,    label: 'None',  icon: '—' },
+  { id: 'cat',   label: 'Cat',   icon: '🐱' },
+  { id: 'dog',   label: 'Dog',   icon: '🐶' },
+  { id: 'bird',  label: 'Bird',  icon: '🐦' },
   { id: 'robot', label: 'Robot', icon: '🤖' },
-  { id: 'duck', label: 'Duck', icon: '🦆' },
+  { id: 'duck',  label: 'Duck',  icon: '🦆' },
 ];
 
-/* ─── Edit modal overlay for model/role/appearance ─── */
+/* ─── Edit modal ─── */
 function AgentEditModal({ agent, engines, onSave, onClose }) {
-  const [name, setName] = useState(agent.name || '');
-  const [engine, setEngine] = useState(agent.engine || 'copilot');
-  const [role, setRole] = useState(agent.role || null);
-  const [yolo, setYolo] = useState(agent.yolo || false);
+  const [name, setName]           = useState(agent.name || '');
+  const [engine, setEngine]       = useState(agent.engine || 'copilot');
+  const [role, setRole]           = useState(agent.role || null);
+  const [yolo, setYolo]           = useState(agent.yolo || false);
   const [skinColor, setSkinColor] = useState(agent.skinColor || null);
-  const [hat, setHat] = useState(agent.hat || null);
-  const [pet, setPet] = useState(agent.pet || null);
+  const [hat, setHat]             = useState(agent.hat || null);
+  const [pet, setPet]             = useState(agent.pet || null);
 
   useEffect(() => {
-    if (agent.role === AGENT_ROLE.REVIEWER) {
-      setEngine('copilot');
-    }
+    if (role === AGENT_ROLE.REVIEWER) setEngine('copilot');
   }, [role]);
 
   const handleSave = () => {
@@ -89,11 +90,11 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
 
   const pillBtn = (selected, activeColor) => ({
     padding: '3px 8px', fontSize: 10, fontWeight: 600,
-    border: `1px solid ${selected ? (activeColor || C.blue) : C.cardBorder}`,
+    border: `1px solid ${selected ? (activeColor || C.blue) : C.border}`,
     borderRadius: 4, cursor: 'pointer',
     background: selected ? `${activeColor || C.blue}22` : 'transparent',
     color: selected ? (activeColor || C.blue) : C.muted,
-    fontFamily: 'inherit',
+    fontFamily: 'inherit', transition: 'all 0.15s ease',
   });
 
   return (
@@ -101,7 +102,7 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
+        background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(6px)',
       }}
       onClick={onClose}
     >
@@ -109,72 +110,78 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
         className="thin-scrollbar"
         style={{
           width: 340, maxHeight: '85vh', overflowY: 'auto',
-          background: C.bg, border: `1px solid ${C.cardBorder}`,
-          borderRadius: 10, boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+          background: C.surface, border: `1px solid ${C.border}`,
+          borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
           padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
+          animation: 'scaleIn 0.18s ease both',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, letterSpacing: '-0.2px' }}>
           Edit Agent
         </div>
 
-        {/* Name */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Name</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</label>
           <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            type="text" value={name} onChange={(e) => setName(e.target.value)}
             style={{
               padding: '6px 8px', background: C.selectBg, color: C.text,
-              border: `1px solid ${C.selectBorder}`, borderRadius: 6,
+              border: `1px solid ${C.border}`, borderRadius: 6,
               fontSize: 12, fontFamily: 'inherit', outline: 'none',
+              transition: 'border-color 0.15s, box-shadow 0.15s',
             }}
-            onFocus={(e) => (e.target.style.borderColor = C.blue)}
-            onBlur={(e) => (e.target.style.borderColor = C.selectBorder)}
+            onFocus={(e) => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.15)'; }}
+            onBlur={(e)  => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none'; }}
           />
         </div>
 
-        {/* Engine select */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Model / Engine</label>
-          <select
-            value={engine}
-            onChange={(e) => setEngine(e.target.value)}
-            disabled={role === AGENT_ROLE.REVIEWER}
-            style={{
-              padding: '6px 8px', background: C.selectBg, color: C.text,
-              border: `1px solid ${C.selectBorder}`, borderRadius: 6,
-              fontSize: 12, fontFamily: 'inherit', outline: 'none',
-              cursor: role === AGENT_ROLE.REVIEWER ? 'not-allowed' : 'pointer',
-              opacity: role === AGENT_ROLE.REVIEWER ? 0.5 : 1,
-            }}
-          >
-            {engines.map((eng) => (
-              <option key={eng.id} value={eng.id}>{eng.label}</option>
-            ))}
-          </select>
+          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Engine</label>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {engines.map((eng) => {
+              const ec = ENGINE_COLOR[eng.id] || C.muted;
+              const disabled = role === AGENT_ROLE.REVIEWER && eng.id !== 'copilot';
+              return (
+                <label key={eng.id} style={{
+                  ...pillBtn(engine === eng.id, ec),
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '5px 10px', borderRadius: 6,
+                  opacity: disabled ? 0.4 : 1,
+                  pointerEvents: disabled ? 'none' : 'auto',
+                  cursor: disabled ? 'not-allowed' : 'pointer',
+                }}>
+                  <input
+                    type="radio" name="modal-engine" value={eng.id}
+                    checked={engine === eng.id} onChange={() => setEngine(eng.id)}
+                    disabled={disabled}
+                    style={{ accentColor: ec }}
+                  />
+                  <span style={{ fontSize: 11, fontWeight: 600 }}>{eng.label}</span>
+                </label>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Role select */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Role</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</label>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {[
-              { id: null, label: 'None' },
-              { id: AGENT_ROLE.ARCHITECT, label: 'Architect' },
-              { id: AGENT_ROLE.DEV, label: 'Dev' },
-              { id: AGENT_ROLE.REVIEWER, label: 'Reviewer' },
+              { id: null,                       label: 'None' },
+              { id: AGENT_ROLE.ARCHITECT,       label: 'Architect' },
+              { id: AGENT_ROLE.SUPER_MASTER,    label: 'Super-Master' },
+              { id: AGENT_ROLE.MASTER,          label: 'Master' },
+              { id: AGENT_ROLE.EXPLORER,        label: 'Explorer' },
+              { id: AGENT_ROLE.DEV,             label: 'Dev' },
+              { id: AGENT_ROLE.INTEGRATOR,      label: 'Integrator' },
+              { id: AGENT_ROLE.TESTER,          label: 'Tester' },
+              { id: AGENT_ROLE.REVIEWER,        label: 'Reviewer' },
+              { id: AGENT_ROLE.RELEASER,        label: 'Releaser' },
             ].map((opt) => (
-              <button
-                key={opt.id || 'none'}
-                type="button"
-                onClick={() => {
-                  setRole(opt.id);
-                  if (opt.id === AGENT_ROLE.REVIEWER) setEngine('copilot');
-                }}
-                style={pillBtn(role === opt.id, ROLE_COLOR[opt.id])}
+              <button key={opt.id || 'none'} type="button"
+                onClick={() => { setRole(opt.id); if (opt.id === AGENT_ROLE.REVIEWER) setEngine('copilot'); }}
+                style={pillBtn(role === opt.id, ROLE_CONFIG[opt.id]?.color)}
               >
                 {opt.label}
               </button>
@@ -182,137 +189,93 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
           </div>
         </div>
 
-        {/* Yolo toggle */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Yolo Mode</span>
-          <button
-            type="button"
-            onClick={() => setYolo(!yolo)}
-            style={{
-              width: 32, height: 18, borderRadius: 9, border: 'none',
-              background: yolo ? C.green : C.cardBorder, cursor: 'pointer',
-              position: 'relative', transition: 'background 0.2s',
-            }}
-          >
+          <button type="button" onClick={() => setYolo(!yolo)} style={{
+            width: 34, height: 20, borderRadius: 10, border: 'none',
+            background: yolo ? C.green : C.border, cursor: 'pointer',
+            position: 'relative', transition: 'background 0.2s',
+          }}>
             <span style={{
-              position: 'absolute', top: 2, width: 14, height: 14,
+              position: 'absolute', top: 2, width: 16, height: 16,
               borderRadius: '50%', background: '#fff',
               left: yolo ? 16 : 2, transition: 'left 0.2s',
             }} />
           </button>
         </div>
 
-        {/* Divider */}
-        <div style={{ borderTop: `1px solid ${C.cardBorder}`, margin: '2px 0' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+        <div style={{ borderTop: `1px solid ${C.border}`, margin: '2px 0' }} />
+        <div style={{ fontSize: 10, fontWeight: 700, color: C.dimmed, textTransform: 'uppercase', letterSpacing: 1.5 }}>
           Appearance
         </div>
 
-        {/* Skin Color */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Skin Color</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Skin</label>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            {/* "Auto" option (name-derived) */}
-            <button
-              type="button"
-              onClick={() => setSkinColor(null)}
-              title="Auto (derived from name)"
+            <button type="button" onClick={() => setSkinColor(null)} title="Auto"
               style={{
-                width: 24, height: 24, borderRadius: '50%', cursor: 'pointer',
-                border: skinColor === null ? `2px solid ${C.blue}` : `2px solid ${C.cardBorder}`,
+                width: 22, height: 22, borderRadius: '50%', cursor: 'pointer',
+                border: skinColor === null ? `2px solid ${C.blue}` : `2px solid ${C.border}`,
                 background: 'conic-gradient(#f4c794, #e0ac69, #c68642, #8d5524, #ffdbac, #f4c794)',
-                boxShadow: skinColor === null ? `0 0 6px ${C.blue}66` : 'none',
               }}
             />
             {SKIN_TONES.map((tone) => (
-              <button
-                key={tone}
-                type="button"
-                onClick={() => setSkinColor(tone)}
-                title={tone}
+              <button key={tone} type="button" onClick={() => setSkinColor(tone)} title={tone}
                 style={{
-                  width: 24, height: 24, borderRadius: '50%', cursor: 'pointer',
-                  border: skinColor === tone ? `2px solid ${C.blue}` : `2px solid ${C.cardBorder}`,
+                  width: 22, height: 22, borderRadius: '50%', cursor: 'pointer',
+                  border: skinColor === tone ? `2px solid ${C.blue}` : `2px solid ${C.border}`,
                   background: tone,
-                  boxShadow: skinColor === tone ? `0 0 6px ${C.blue}66` : 'none',
                 }}
               />
             ))}
           </div>
         </div>
 
-        {/* Hat */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Hat</label>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {HAT_OPTIONS.map((opt) => (
-              <button
-                key={opt.id || 'none'}
-                type="button"
-                onClick={() => setHat(opt.id)}
-                title={opt.label}
-                style={{
-                  ...pillBtn(hat === opt.id, C.blue),
-                  padding: '4px 8px', fontSize: 13,
-                }}
-              >
+              <button key={opt.id || 'none'} type="button" onClick={() => setHat(opt.id)} title={opt.label}
+                style={{ ...pillBtn(hat === opt.id, C.blue), padding: '4px 8px', fontSize: 13 }}>
                 {opt.icon}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Pet */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Pet</label>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {PET_OPTIONS.map((opt) => (
-              <button
-                key={opt.id || 'none'}
-                type="button"
-                onClick={() => setPet(opt.id)}
-                title={opt.label}
-                style={{
-                  ...pillBtn(pet === opt.id, C.blue),
-                  padding: '4px 8px', fontSize: 13,
-                }}
-              >
+              <button key={opt.id || 'none'} type="button" onClick={() => setPet(opt.id)} title={opt.label}
+                style={{ ...pillBtn(pet === opt.id, C.blue), padding: '4px 8px', fontSize: 13 }}>
                 {opt.icon}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Actions */}
         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', marginTop: 4 }}>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              padding: '5px 12px', fontSize: 11, fontWeight: 600,
-              background: '#21262d', color: C.text, border: `1px solid ${C.cardBorder}`,
-              borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!name.trim()}
-            style={{
-              padding: '5px 12px', fontSize: 11, fontWeight: 600,
-              background: name.trim() ? '#238636' : '#21262d',
-              color: name.trim() ? '#fff' : C.dimmed,
-              border: '1px solid rgba(240,246,252,0.1)',
-              borderRadius: 4, cursor: name.trim() ? 'pointer' : 'not-allowed',
-              fontFamily: 'inherit',
-            }}
-          >
-            Save
-          </button>
+          <button type="button" onClick={onClose} style={{
+            padding: '5px 14px', fontSize: 11, fontWeight: 600,
+            background: 'transparent', color: C.muted, border: `1px solid ${C.border}`,
+            borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit',
+            transition: 'border-color 0.15s, color 0.15s',
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.muted; e.currentTarget.style.color = C.text; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
+          >Cancel</button>
+          <button type="button" onClick={handleSave} disabled={!name.trim()} style={{
+            padding: '5px 14px', fontSize: 11, fontWeight: 600,
+            background: name.trim() ? '#16a34a' : '#f1f5f9',
+            color: name.trim() ? '#fff' : C.dimmed,
+            border: `1px solid ${name.trim() ? '#16a34a' : C.border}`,
+            borderRadius: 6, cursor: name.trim() ? 'pointer' : 'not-allowed',
+            fontFamily: 'inherit', transition: 'filter 0.15s',
+          }}
+            onMouseEnter={(e) => { if (name.trim()) e.currentTarget.style.filter = 'brightness(1.15)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
+          >Save</button>
         </div>
       </div>
     </div>
@@ -320,10 +283,10 @@ function AgentEditModal({ agent, engines, onSave, onClose }) {
 }
 
 /* ─── Single Agent Card ─── */
-function AgentCard({ agent, visualState, isEditing, onEdit, onDelete }) {
-  const status = getAgentStatus(visualState);
-  const roleColor = ROLE_COLOR[agent.role] || C.muted;
-  const isIdle = status.label === 'Idle';
+function AgentCard({ agent, visualState, onEdit, onDelete }) {
+  const status     = getAgentStatus(visualState);
+  const engineColor = ENGINE_COLOR[agent.engine] || C.dimmed;
+  const isIdle     = status.label === 'Idle';
 
   const handleDragStart = (e) => {
     e.dataTransfer.setData('application/agent-id', agent.id);
@@ -336,113 +299,117 @@ function AgentCard({ agent, visualState, isEditing, onEdit, onDelete }) {
       draggable={isIdle}
       onDragStart={isIdle ? handleDragStart : undefined}
       style={{
-        background: C.cardBg,
-        border: `1px solid ${isEditing ? C.blue : C.cardBorder}`,
-        borderRadius: 8,
-        padding: '10px 12px',
+        background: `${engineColor}12`,
+        border: `1px solid ${engineColor}33`,
+        borderRadius: 6,
+        padding: '5px 8px',
         cursor: isIdle ? 'grab' : 'default',
-        transition: 'border-color 0.15s, box-shadow 0.15s',
+        transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
         opacity: isIdle ? 1 : 0.7,
       }}
       onMouseEnter={(e) => {
-        if (!isEditing) e.currentTarget.style.borderColor = C.cardBorderHover;
+        e.currentTarget.style.background = `${engineColor}22`;
+        e.currentTarget.style.borderColor = `${engineColor}66`;
+        e.currentTarget.style.boxShadow = `0 2px 6px rgba(0,0,0,0.1)`;
       }}
       onMouseLeave={(e) => {
-        if (!isEditing) e.currentTarget.style.borderColor = C.cardBorder;
+        e.currentTarget.style.background = `${engineColor}12`;
+        e.currentTarget.style.borderColor = `${engineColor}33`;
+        e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      {/* Top row: name + status dot */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-        <div style={{
-          width: 8, height: 8, borderRadius: '50%',
-          background: status.color, flexShrink: 0,
-          boxShadow: status.label === 'Working' ? `0 0 6px ${C.green}88` : 'none',
+      {/* Single row: dot + name + accessories + actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        <span style={{
+          width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+          background: status.color,
+          boxShadow: status.label === 'Working' ? `0 0 5px ${C.green}88` : 'none',
+          animation: status.label === 'Working' ? 'statusDotPulse 2s ease-in-out infinite' : 'none',
         }} />
-        <div style={{
-          fontSize: 13, fontWeight: 600, color: C.text,
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          flex: 1,
-        }}>
-          {agent.name}
-        </div>
-        {/* Edit button */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onEdit(agent.id); }}
-          title="Edit agent"
-          style={{
-            background: 'none', border: 'none', color: C.dimmed,
-            cursor: 'pointer', padding: '2px 4px', fontSize: 12,
-            borderRadius: 4, lineHeight: 1,
-          }}
+        <span style={{
+          fontSize: 11, fontWeight: 600, color: C.text,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+        }}>{agent.name}</span>
+        {agent.hat && <span style={{ fontSize: 9 }}>{HAT_OPTIONS.find(h => h.id === agent.hat)?.icon}</span>}
+        {agent.pet && <span style={{ fontSize: 9 }}>{PET_OPTIONS.find(p => p.id === agent.pet)?.icon}</span>}
+        {agent.yolo && (
+          <span style={{
+            fontSize: 8, fontWeight: 700, color: '#d29922',
+            background: '#d2992218', border: '1px solid #d2992233',
+            padding: '0px 4px', borderRadius: 8,
+          }}>Y</span>
+        )}
+        <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(agent.id); }}
+          style={{ background: 'none', border: 'none', color: C.dimmed, cursor: 'pointer', padding: '0 2px', fontSize: 10, borderRadius: 3, lineHeight: 1 }}
           onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
           onMouseLeave={(e) => (e.currentTarget.style.color = C.dimmed)}
-        >
-          &#9881;
-        </button>
-        {/* Delete button */}
+          title="Edit"
+        >✎</button>
         {isIdle && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onDelete(agent.id); }}
-            title="Delete agent"
-            style={{
-              background: 'none', border: 'none', color: C.dimmed,
-              cursor: 'pointer', padding: '2px 4px', fontSize: 12,
-              borderRadius: 4, lineHeight: 1,
-            }}
+          <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(agent.id); }}
+            style={{ background: 'none', border: 'none', color: C.dimmed, cursor: 'pointer', padding: '0 2px', fontSize: 11, borderRadius: 3, lineHeight: 1 }}
             onMouseEnter={(e) => (e.currentTarget.style.color = C.red)}
             onMouseLeave={(e) => (e.currentTarget.style.color = C.dimmed)}
-          >
-            &#10005;
-          </button>
+            title="Delete"
+          >×</button>
         )}
       </div>
 
-      {/* Info row: role + engine + accessories */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        {agent.role && (
-          <span style={{
-            fontSize: 9, fontWeight: 700, color: roleColor,
-            textTransform: 'uppercase', letterSpacing: 1,
-            background: `${roleColor}18`, padding: '1px 5px',
-            borderRadius: 3,
-          }}>
-            {ROLE_LABEL[agent.role] || agent.role}
-          </span>
-        )}
+      {/* Sub-row: engine + status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
         <span style={{
-          fontSize: 9, color: C.dimmed,
-          background: `${C.dimmed}18`, padding: '1px 5px',
-          borderRadius: 3,
+          fontSize: 8, fontWeight: 700, letterSpacing: '0.04em',
+          color: engineColor,
+          textTransform: 'uppercase',
         }}>
-          {agent.engine || 'copilot'}
+          {ENGINE_LABEL[agent.engine] || agent.engine || 'copilot'}
         </span>
-        {agent.hat && (
-          <span style={{ fontSize: 10, lineHeight: 1 }} title={`Hat: ${agent.hat}`}>
-            {HAT_OPTIONS.find((h) => h.id === agent.hat)?.icon || ''}
-          </span>
-        )}
-        {agent.pet && (
-          <span style={{ fontSize: 10, lineHeight: 1 }} title={`Pet: ${agent.pet}`}>
-            {PET_OPTIONS.find((p) => p.id === agent.pet)?.icon || ''}
-          </span>
-        )}
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 9, color: status.color }}>
+        <span style={{ fontSize: 8, color: status.color, fontWeight: 600 }}>
           {status.label}
         </span>
       </div>
+    </div>
+  );
+}
 
-      {/* Drag hint for idle agents */}
-      {isIdle && (
-        <div style={{
-          fontSize: 9, color: C.dimmed, marginTop: 6,
-          textAlign: 'center', fontStyle: 'italic',
-        }}>
-          Drag to desk to assign work
-        </div>
-      )}
+/* ─── Role group section ─── */
+function RoleSection({ roleKey, agents, visualStates, onEdit, onDelete }) {
+  const cfg = ROLE_CONFIG[roleKey] || ROLE_CONFIG.general;
+  if (agents.length === 0) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {/* Section header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 5,
+        padding: '3px 6px',
+        background: `${cfg.color}10`,
+        borderLeft: `2px solid ${cfg.color}`,
+        borderRadius: '0 4px 4px 0',
+        marginBottom: 1,
+      }}>
+        <span style={{ fontSize: 11 }}>{cfg.icon}</span>
+        <span style={{
+          fontSize: 9, fontWeight: 700, color: cfg.color,
+          textTransform: 'uppercase', letterSpacing: '0.08em',
+        }}>{cfg.label}</span>
+        <span style={{
+          marginLeft: 'auto', fontSize: 9, color: cfg.color,
+          background: `${cfg.color}18`, padding: '0px 4px',
+          borderRadius: 8, fontWeight: 600,
+        }}>{agents.length}</span>
+      </div>
+      {/* Cards */}
+      {agents.map((agent) => (
+        <AgentCard
+          key={agent.id}
+          agent={agent}
+          visualState={visualStates[agent.id]}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      ))}
     </div>
   );
 }
@@ -456,7 +423,7 @@ export default function AgentCardPanel({
   onCreateAgent,
 }) {
   const [editingId, setEditingId] = useState(null);
-  const [engines, setEngines] = useState([]);
+  const [engines, setEngines]     = useState([]);
 
   useEffect(() => {
     api.getEngines().then((r) => setEngines(r.engines || [])).catch(() => {});
@@ -467,154 +434,79 @@ export default function AgentCardPanel({
     setEditingId(null);
   };
 
-  const idleAgents = agents.filter((a) => {
-    const vs = visualStates[a.id];
-    return !vs || vs === AGENT_VISUAL_STATE.IDLE_AT_COFFEE
-      || vs === AGENT_VISUAL_STATE.CHATTING_AT_COOLER
-      || vs === AGENT_VISUAL_STATE.SITTING_ON_COUCH;
-  });
-
-  const workingAgents = agents.filter((a) => {
-    const vs = visualStates[a.id];
-    return vs === AGENT_VISUAL_STATE.WORKING_AT_DESK
-      || vs === AGENT_VISUAL_STATE.THINKING_AT_DESK;
-  });
-
-  const walkingAgents = agents.filter((a) => {
-    const vs = visualStates[a.id];
-    return vs && vs.includes('walking');
-  });
+  // Group agents by role
+  const grouped = {
+    [AGENT_ROLE.ARCHITECT]: [],
+    [AGENT_ROLE.DEV]:       [],
+    [AGENT_ROLE.REVIEWER]:  [],
+    general:                [],
+  };
+  for (const agent of agents) {
+    const key = grouped[agent.role] !== undefined ? agent.role : 'general';
+    grouped[key].push(agent);
+  }
 
   const editingAgent = editingId ? agents.find((a) => a.id === editingId) : null;
+  const totalWorking = agents.filter((a) => {
+    const vs = visualStates[a.id];
+    return vs === AGENT_VISUAL_STATE.WORKING_AT_DESK || vs === AGENT_VISUAL_STATE.THINKING_AT_DESK;
+  }).length;
 
   return (
     <div style={{
-      width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column',
-      border: `2px solid #2d333b`, borderRadius: 8, overflow: 'hidden',
-      background: C.bg, maxHeight: '100%',
+      width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column',
+      borderRight: '1px solid #e2e8f0', background: C.bg,
+      overflow: 'hidden',
     }}>
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 6,
-        padding: '6px 12px', background: C.headerBg,
-        borderBottom: `2px solid ${C.headerBorder}`,
+        padding: '10px 12px',
+        borderBottom: '1px solid #e2e8f0',
+        background: '#f8fafc', flexShrink: 0,
       }}>
-        <span style={{ fontSize: 14 }}>&#129302;</span>
-        <span style={{
-          fontSize: 11, fontWeight: 700, color: C.muted,
-          textTransform: 'uppercase', letterSpacing: '1.5px',
-        }}>
+        <span style={{ fontSize: 14 }}>🤖</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '1.5px' }}>
           Agents
         </span>
+        {totalWorking > 0 && (
+          <span style={{
+            fontSize: 9, color: C.green, fontWeight: 700,
+            background: 'rgba(22,163,74,0.08)', padding: '1px 6px',
+            borderRadius: 8, border: '1px solid rgba(22,163,74,0.2)',
+          }}>{totalWorking} working</span>
+        )}
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 10, color: C.dimmed }}>
-          {agents.length}
-        </span>
-        {/* Create agent button */}
-        <button
-          type="button"
-          onClick={onCreateAgent}
-          title="New agent"
+        <span style={{ fontSize: 10, color: C.dimmed }}>{agents.length}</span>
+        <button type="button" onClick={onCreateAgent} title="New agent"
           style={{
-            background: 'none', border: `1px solid ${C.cardBorder}`,
-            color: C.muted, cursor: 'pointer', padding: '1px 6px',
-            fontSize: 14, borderRadius: 4, lineHeight: 1, fontWeight: 700,
+            background: 'none', border: `1px solid ${C.border}`,
+            color: C.muted, cursor: 'pointer',
+            padding: '2px 7px', fontSize: 14, borderRadius: 4, lineHeight: 1, fontWeight: 700,
+            transition: 'border-color 0.15s, color 0.15s',
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = C.blue;
-            e.currentTarget.style.color = C.blue;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = C.cardBorder;
-            e.currentTarget.style.color = C.muted;
-          }}
-        >
-          +
-        </button>
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.blue; e.currentTarget.style.color = C.blue; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
+        >+</button>
       </div>
 
-      {/* Card list */}
-      <div
-        className="thin-scrollbar"
-        style={{
-          flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: 8,
-          display: 'flex', flexDirection: 'column', gap: 6,
-        }}
-      >
+      {/* Grouped card list */}
+      <div className="thin-scrollbar" style={{
+        flex: 1, overflowY: 'auto', overflowX: 'hidden',
+        padding: '6px 6px', display: 'flex', flexDirection: 'column', gap: 8,
+      }}>
         {agents.length === 0 && (
-          <div style={{
-            padding: 20, textAlign: 'center', color: C.dimmed, fontSize: 12,
-          }}>
-            No agents yet.<br />
-            Click + to create one.
+          <div style={{ padding: 20, textAlign: 'center', color: C.dimmed, fontSize: 11, lineHeight: 1.6 }}>
+            No agents yet.<br />Click + to create one.
           </div>
         )}
 
-        {/* Idle agents first */}
-        {idleAgents.length > 0 && (
-          <div style={{
-            fontSize: 9, fontWeight: 700, color: C.dimmed,
-            textTransform: 'uppercase', letterSpacing: 1.5,
-            padding: '4px 4px 2px',
-          }}>
-            Idle ({idleAgents.length})
-          </div>
-        )}
-        {idleAgents.map((agent) => (
-          <AgentCard
-            key={agent.id}
-            agent={agent}
-            visualState={visualStates[agent.id]}
-            isEditing={editingId === agent.id}
-            onEdit={setEditingId}
-            onDelete={onDeleteAgent}
-          />
-        ))}
-
-        {/* Walking agents */}
-        {walkingAgents.length > 0 && (
-          <div style={{
-            fontSize: 9, fontWeight: 700, color: C.dimmed,
-            textTransform: 'uppercase', letterSpacing: 1.5,
-            padding: '4px 4px 2px', marginTop: 4,
-          }}>
-            Walking ({walkingAgents.length})
-          </div>
-        )}
-        {walkingAgents.map((agent) => (
-          <AgentCard
-            key={agent.id}
-            agent={agent}
-            visualState={visualStates[agent.id]}
-            isEditing={editingId === agent.id}
-            onEdit={setEditingId}
-            onDelete={onDeleteAgent}
-          />
-        ))}
-
-        {/* Working agents */}
-        {workingAgents.length > 0 && (
-          <div style={{
-            fontSize: 9, fontWeight: 700, color: C.dimmed,
-            textTransform: 'uppercase', letterSpacing: 1.5,
-            padding: '4px 4px 2px', marginTop: 4,
-          }}>
-            Working ({workingAgents.length})
-          </div>
-        )}
-        {workingAgents.map((agent) => (
-          <AgentCard
-            key={agent.id}
-            agent={agent}
-            visualState={visualStates[agent.id]}
-            isEditing={editingId === agent.id}
-            onEdit={setEditingId}
-            onDelete={onDeleteAgent}
-          />
-        ))}
+        <RoleSection roleKey={AGENT_ROLE.ARCHITECT} agents={grouped[AGENT_ROLE.ARCHITECT]} visualStates={visualStates} onEdit={setEditingId} onDelete={onDeleteAgent} />
+        <RoleSection roleKey={AGENT_ROLE.DEV}       agents={grouped[AGENT_ROLE.DEV]}       visualStates={visualStates} onEdit={setEditingId} onDelete={onDeleteAgent} />
+        <RoleSection roleKey={AGENT_ROLE.REVIEWER}  agents={grouped[AGENT_ROLE.REVIEWER]}  visualStates={visualStates} onEdit={setEditingId} onDelete={onDeleteAgent} />
+        <RoleSection roleKey="general"              agents={grouped.general}               visualStates={visualStates} onEdit={setEditingId} onDelete={onDeleteAgent} />
       </div>
 
-      {/* Edit modal — rendered at top level, outside overflow:hidden */}
       {editingAgent && (
         <AgentEditModal
           agent={editingAgent}

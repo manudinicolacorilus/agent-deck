@@ -5,49 +5,56 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.6)',
+    background: 'rgba(15, 23, 42, 0.45)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    backdropFilter: 'blur(4px)',
+    backdropFilter: 'blur(6px)',
   },
   modal: {
-    background: '#161b22',
-    border: '1px solid #30363d',
-    borderRadius: 12,
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: 14,
     width: '100%',
     maxWidth: 520,
     padding: 0,
-    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.4)',
+    boxShadow: '0 24px 64px rgba(0, 0, 0, 0.15)',
+    animation: 'scaleIn 0.18s ease both',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid #30363d',
+    borderBottom: '1px solid #e2e8f0',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
+    letterSpacing: '-0.2px',
   },
   headerSub: {
     fontSize: 12,
-    color: '#8b949e',
-    fontWeight: 400,
+    color: '#2563eb',
+    fontWeight: 500,
     marginLeft: 8,
+    background: 'rgba(37,99,235,0.07)',
+    padding: '1px 7px',
+    borderRadius: 10,
+    border: '1px solid rgba(37,99,235,0.18)',
   },
   closeBtn: {
     background: 'none',
-    border: 'none',
-    color: '#8b949e',
-    fontSize: 20,
+    border: '1px solid transparent',
+    color: '#94a3b8',
+    fontSize: 18,
     cursor: 'pointer',
     padding: '4px 8px',
     borderRadius: 6,
     lineHeight: 1,
+    transition: 'color 0.15s ease, background 0.15s ease, border-color 0.15s ease',
   },
   body: {
     padding: '20px',
@@ -56,68 +63,77 @@ const styles = {
     gap: 16,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
   },
   input: {
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 14,
     fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
     outline: 'none',
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   },
   textarea: {
-    padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    padding: '10px 12px',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 14,
     fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
     outline: 'none',
     resize: 'vertical',
-    minHeight: 100,
-    lineHeight: 1.5,
+    minHeight: 110,
+    lineHeight: 1.6,
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   },
   footer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 10,
-    padding: '16px 20px',
-    borderTop: '1px solid #30363d',
+    gap: 8,
+    padding: '14px 20px',
+    borderTop: '1px solid #e2e8f0',
+    background: '#f8fafc',
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
   cancelBtn: {
     padding: '6px 16px',
-    background: '#21262d',
-    color: '#e6edf3',
-    border: '1px solid #30363d',
+    background: 'transparent',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
     fontFamily: 'inherit',
+    transition: 'color 0.15s ease, border-color 0.15s ease, background 0.15s ease',
   },
   submitBtn: {
-    padding: '6px 16px',
-    background: '#238636',
+    padding: '6px 18px',
+    background: '#16a34a',
     color: '#fff',
-    border: '1px solid rgba(240, 246, 252, 0.1)',
+    border: '1px solid transparent',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
     fontFamily: 'inherit',
+    transition: 'filter 0.15s ease, box-shadow 0.15s ease',
   },
   browseBtn: {
     padding: '8px 14px',
-    background: '#21262d',
-    color: '#e6edf3',
-    border: '1px solid #30363d',
+    background: '#f1f5f9',
+    color: '#0f172a',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -125,6 +141,7 @@ const styles = {
     fontFamily: 'inherit',
     whiteSpace: 'nowrap',
     flexShrink: 0,
+    transition: 'background 0.15s ease, border-color 0.15s ease',
   },
 };
 
@@ -184,8 +201,8 @@ export default function AssignPromptModal({ isOpen, agent, onClose, onSubmit }) 
                     onChange={(e) => setWorkDir(e.target.value)}
                     placeholder="."
                     required
-                    onFocus={(e) => (e.target.style.borderColor = '#388bfd')}
-                    onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                    onFocus={(e) => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)'; }}
+                    onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
                   />
                   <button
                     type="button"
@@ -205,8 +222,8 @@ export default function AssignPromptModal({ isOpen, agent, onClose, onSubmit }) 
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Describe the task for this agent..."
-                  onFocus={(e) => (e.target.style.borderColor = '#388bfd')}
-                  onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                  onFocus={(e) => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)'; }}
+                  onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>

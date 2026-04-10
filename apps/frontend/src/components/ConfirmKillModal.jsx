@@ -4,7 +4,7 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.6)',
+    background: 'rgba(15, 23, 42, 0.45)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -12,13 +12,13 @@ const styles = {
     backdropFilter: 'blur(4px)',
   },
   modal: {
-    background: '#161b22',
-    border: '1px solid #30363d',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
     borderRadius: 12,
     width: '100%',
     maxWidth: 420,
     padding: 0,
-    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.4)',
+    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.14)',
   },
   body: {
     padding: '24px 20px',
@@ -34,12 +34,12 @@ const styles = {
   },
   message: {
     fontSize: 14,
-    color: '#e6edf3',
+    color: '#0f172a',
     lineHeight: 1.5,
   },
   agentLabel: {
     fontWeight: 600,
-    color: '#58a6ff',
+    color: '#2563eb',
   },
   footer: {
     display: 'flex',
@@ -47,13 +47,13 @@ const styles = {
     justifyContent: 'flex-end',
     gap: 10,
     padding: '16px 20px',
-    borderTop: '1px solid #30363d',
+    borderTop: '1px solid #e2e8f0',
   },
   cancelBtn: {
     padding: '6px 16px',
-    background: '#21262d',
-    color: '#e6edf3',
-    border: '1px solid #30363d',
+    background: '#f1f5f9',
+    color: '#0f172a',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -63,9 +63,9 @@ const styles = {
   },
   killBtn: {
     padding: '6px 16px',
-    background: '#da3633',
+    background: '#dc2626',
     color: '#fff',
-    border: '1px solid rgba(240, 246, 252, 0.1)',
+    border: '1px solid transparent',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -107,7 +107,7 @@ export default function ConfirmKillModal({ isOpen, agentLabel, onConfirmKill, on
           <button
             style={{
               ...styles.cancelBtn,
-              background: cancelHover ? '#30363d' : '#21262d',
+              background: cancelHover ? '#e2e8f0' : '#f1f5f9',
             }}
             onMouseEnter={() => setCancelHover(true)}
             onMouseLeave={() => setCancelHover(false)}
@@ -118,7 +118,7 @@ export default function ConfirmKillModal({ isOpen, agentLabel, onConfirmKill, on
           <button
             style={{
               ...styles.killBtn,
-              background: killHover ? '#b62324' : '#da3633',
+              background: killHover ? '#b91c1c' : '#dc2626',
             }}
             onMouseEnter={() => setKillHover(true)}
             onMouseLeave={() => setKillHover(false)}

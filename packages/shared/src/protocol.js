@@ -47,9 +47,15 @@ export const AGENT_VISUAL_STATE = {
 
 // Agent roles
 export const AGENT_ROLE = {
-  ARCHITECT: 'architect',
-  DEV: 'dev',
-  REVIEWER: 'reviewer',
+  ARCHITECT:    'architect',
+  SUPER_MASTER: 'super_master',
+  MASTER:       'master',
+  EXPLORER:     'explorer',
+  DEV:          'dev',
+  INTEGRATOR:   'integrator',
+  TESTER:       'tester',
+  REVIEWER:     'reviewer',
+  RELEASER:     'releaser',
 };
 
 // Workflow states

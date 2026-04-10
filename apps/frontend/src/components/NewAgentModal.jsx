@@ -9,7 +9,7 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.6)',
+    background: 'rgba(15, 23, 42, 0.45)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -17,30 +17,30 @@ const styles = {
     backdropFilter: 'blur(4px)',
   },
   modal: {
-    background: '#161b22',
-    border: '1px solid #30363d',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
     borderRadius: 12,
     width: '100%',
     maxWidth: 520,
     padding: 0,
-    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.4)',
+    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.14)',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid #30363d',
+    borderBottom: '1px solid #e2e8f0',
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   closeBtn: {
     background: 'none',
     border: 'none',
-    color: '#8b949e',
+    color: '#94a3b8',
     fontSize: 20,
     cursor: 'pointer',
     padding: '4px 8px',
@@ -62,14 +62,14 @@ const styles = {
   label: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   input: {
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 14,
     fontFamily: 'inherit',
     outline: 'none',
@@ -77,10 +77,10 @@ const styles = {
   },
   textarea: {
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 14,
     fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
     outline: 'none',
@@ -91,7 +91,7 @@ const styles = {
   },
   hint: {
     fontSize: 12,
-    color: '#8b949e',
+    color: '#64748b',
     marginTop: -2,
   },
   footer: {
@@ -100,13 +100,16 @@ const styles = {
     justifyContent: 'flex-end',
     gap: 10,
     padding: '16px 20px',
-    borderTop: '1px solid #30363d',
+    borderTop: '1px solid #e2e8f0',
+    background: '#f8fafc',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   cancelBtn: {
     padding: '6px 16px',
-    background: '#21262d',
-    color: '#e6edf3',
-    border: '1px solid #30363d',
+    background: '#f1f5f9',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -116,9 +119,9 @@ const styles = {
   },
   submitBtn: {
     padding: '6px 16px',
-    background: '#238636',
+    background: '#16a34a',
     color: '#fff',
-    border: '1px solid rgba(240, 246, 252, 0.1)',
+    border: '1px solid transparent',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -133,9 +136,9 @@ const styles = {
   },
   browseBtn: {
     padding: '8px 14px',
-    background: '#21262d',
-    color: '#e6edf3',
-    border: '1px solid #30363d',
+    background: '#f1f5f9',
+    color: '#0f172a',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -155,30 +158,30 @@ const styles = {
     padding: '8px 14px',
     borderRadius: 8,
     cursor: 'pointer',
-    border: '1px solid #30363d',
-    background: '#0d1117',
+    border: '1px solid #cbd5e1',
+    background: '#f8fafc',
     flex: 1,
     transition: 'all 0.15s ease',
   },
   engineOptionSelected: {
-    border: '1px solid #388bfd',
-    background: 'rgba(56, 139, 253, 0.1)',
+    border: '1px solid #2563eb',
+    background: 'rgba(37, 99, 235, 0.06)',
   },
   engineRadio: {
-    accentColor: '#388bfd',
+    accentColor: '#2563eb',
   },
   engineLabel: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   toggleRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
   },
   toggleLeft: {
@@ -189,11 +192,11 @@ const styles = {
   toggleLabel: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   toggleHint: {
     fontSize: 11,
-    color: '#8b949e',
+    color: '#64748b',
   },
   toggleSwitch: {
     width: 40,
@@ -216,10 +219,10 @@ const styles = {
   },
   yoloWarning: {
     fontSize: 12,
-    color: '#d29922',
+    color: '#d97706',
     padding: '6px 12px',
-    background: 'rgba(210, 153, 34, 0.1)',
-    border: '1px solid rgba(210, 153, 34, 0.3)',
+    background: 'rgba(217, 119, 6, 0.08)',
+    border: '1px solid rgba(217, 119, 6, 0.25)',
     borderRadius: 6,
   },
 };
@@ -297,8 +300,8 @@ export default function NewAgentModal({ isOpen, onClose, onSubmit }) {
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   placeholder="e.g. fix-auth-bug"
-                  onFocus={(e) => (e.target.style.borderColor = '#388bfd')}
-                  onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                  onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
+                  onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
                 />
               </div>
 
@@ -311,8 +314,8 @@ export default function NewAgentModal({ isOpen, onClose, onSubmit }) {
                     value={workDir}
                     onChange={(e) => setWorkDir(e.target.value)}
                     placeholder="."
-                    onFocus={(e) => (e.target.style.borderColor = '#388bfd')}
-                    onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                    onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
+                    onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
                   />
                   <button
                     type="button"
@@ -332,8 +335,8 @@ export default function NewAgentModal({ isOpen, onClose, onSubmit }) {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Describe the task for the agent..."
-                  onFocus={(e) => (e.target.style.borderColor = '#388bfd')}
-                  onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                  onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
+                  onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
                 />
               </div>
 
@@ -376,7 +379,7 @@ export default function NewAgentModal({ isOpen, onClose, onSubmit }) {
                     aria-label="Toggle yolo mode"
                     style={{
                       ...styles.toggleSwitch,
-                      background: yolo ? '#238636' : '#30363d',
+                      background: yolo ? '#16a34a' : '#cbd5e1',
                     }}
                     onClick={() => setYolo(!yolo)}
                     data-testid="yolo-toggle"
@@ -400,7 +403,7 @@ export default function NewAgentModal({ isOpen, onClose, onSubmit }) {
                 type="button"
                 style={{
                   ...styles.cancelBtn,
-                  background: cancelHover ? '#30363d' : '#21262d',
+                  background: cancelHover ? '#e2e8f0' : '#f1f5f9',
                 }}
                 onMouseEnter={() => setCancelHover(true)}
                 onMouseLeave={() => setCancelHover(false)}
@@ -412,7 +415,7 @@ export default function NewAgentModal({ isOpen, onClose, onSubmit }) {
                 type="submit"
                 style={{
                   ...styles.submitBtn,
-                  background: submitHover ? '#2ea043' : '#238636',
+                  background: submitHover ? '#15803d' : '#16a34a',
                 }}
                 onMouseEnter={() => setSubmitHover(true)}
                 onMouseLeave={() => setSubmitHover(false)}

@@ -1,3 +1,49 @@
+/* ─── Design Tokens ─── */
+:root {
+  /* Backgrounds */
+  --bg-canvas:    #f8fafc;
+  --bg-surface:   #ffffff;
+  --bg-overlay:   #f1f5f9;
+  --bg-inset:     #f8fafc;
+
+  /* Borders */
+  --border-subtle:  #e2e8f0;
+  --border-default: #cbd5e1;
+  --border-strong:  #94a3b8;
+
+  /* Text */
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+
+  /* Accents */
+  --accent-blue:    #2563eb;
+  --accent-green:   #16a34a;
+  --accent-green-dark: #15803d;
+  --accent-red:     #dc2626;
+  --accent-orange:  #ea580c;
+  --accent-purple:  #7c3aed;
+  --accent-yellow:  #d97706;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.10);
+  --shadow-lg:  0 16px 48px rgba(0, 0, 0, 0.14);
+  --shadow-xl:  0 24px 64px rgba(0, 0, 0, 0.18);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 20px;
+
+  /* Transitions */
+  --transition-fast:   0.1s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow:   0.3s ease;
+}
+
 *,
 *::before,
 *::after {
@@ -13,8 +59,8 @@ html, body, #root {
 }
 
 body {
-  background: #0d1117;
-  color: #e6edf3;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji';
   line-height: 1.5;
@@ -33,32 +79,37 @@ code, pre, .mono {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0d1117;
+  background: var(--bg-canvas);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #30363d;
-  border-radius: 4px;
+  background: var(--border-default);
+  border-radius: var(--radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+  background: var(--border-strong);
 }
 
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #30363d #0d1117;
+  scrollbar-color: var(--border-default) var(--bg-canvas);
 }
 
 ::selection {
-  background: rgba(56, 139, 253, 0.3);
+  background: rgba(56, 139, 253, 0.25);
 }
 
-/* Office view animations */
+/* ─── Micro-animations ─── */
 @keyframes pulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.8; }
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50% { box-shadow: 0 0 0 4px transparent; opacity: 0.7; }
 }
 
 @keyframes progressPulse {
@@ -77,8 +128,40 @@ code, pre, .mono {
   50% { opacity: 0.8; }
 }
 
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes statusDotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  40% { box-shadow: 0 0 0 4px transparent; opacity: 0.8; }
+}
+
+/* ─── Utility classes ─── */
 .coffee-steam {
   animation: coffeeStream 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fadeSlideIn var(--transition-slow) both;
 }
 
 /* Thin scrollbar for narrow panels */
@@ -92,4 +175,13 @@ code, pre, .mono {
 
 .thin-scrollbar {
   scrollbar-width: thin;
+}
+
+/* ─── Interactive element base resets ─── */
+button {
+  font-family: inherit;
+}
+
+button:active {
+  transform: translateY(1px);
 }

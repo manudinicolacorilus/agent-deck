@@ -114,11 +114,8 @@ export default function App() {
             visualStates={visualStates}
             workflows={workflows}
             onClickIdleAgent={handleClickIdleAgent}
-            onClickWorkingAgent={handleClickWorkingAgent}
             onDeleteAgent={deleteAgent}
-            onUpdateAgent={updateAgent}
             onCreateAgent={() => setCreateAgentModalOpen(true)}
-            onDropAgentOnDesk={handleDropAgentOnDesk}
             onCancelWorkflow={cancelWorkflow}
           />
         )}

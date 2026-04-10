@@ -6,7 +6,7 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.6)',
+    background: 'rgba(15, 23, 42, 0.45)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -14,30 +14,30 @@ const styles = {
     backdropFilter: 'blur(4px)',
   },
   modal: {
-    background: '#161b22',
-    border: '1px solid #30363d',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
     borderRadius: 12,
     width: '100%',
     maxWidth: 600,
     padding: 0,
-    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.4)',
+    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.14)',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid #30363d',
+    borderBottom: '1px solid #e2e8f0',
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   closeBtn: {
     background: 'none',
     border: 'none',
-    color: '#8b949e',
+    color: '#94a3b8',
     fontSize: 20,
     cursor: 'pointer',
     padding: '4px 8px',
@@ -53,24 +53,24 @@ const styles = {
   label: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   input: {
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 14,
     fontFamily: 'inherit',
     outline: 'none',
   },
   textarea: {
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 14,
     fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
     outline: 'none',
@@ -84,13 +84,16 @@ const styles = {
     justifyContent: 'flex-end',
     gap: 10,
     padding: '16px 20px',
-    borderTop: '1px solid #30363d',
+    borderTop: '1px solid #e2e8f0',
+    background: '#f8fafc',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   cancelBtn: {
     padding: '6px 16px',
-    background: '#21262d',
-    color: '#e6edf3',
-    border: '1px solid #30363d',
+    background: '#f1f5f9',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -99,9 +102,9 @@ const styles = {
   },
   submitBtn: {
     padding: '6px 16px',
-    background: '#8957e5',
+    background: '#7c3aed',
     color: '#fff',
-    border: '1px solid rgba(240, 246, 252, 0.1)',
+    border: '1px solid transparent',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -110,9 +113,9 @@ const styles = {
   },
   browseBtn: {
     padding: '8px 14px',
-    background: '#21262d',
-    color: '#e6edf3',
-    border: '1px solid #30363d',
+    background: '#f1f5f9',
+    color: '#0f172a',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
@@ -126,9 +129,9 @@ const styles = {
     alignItems: 'center',
     gap: 8,
     padding: '12px 16px',
-    background: '#0d111766',
+    background: '#f8fafc',
     borderRadius: 8,
-    border: '1px solid #30363d',
+    border: '1px solid #e2e8f0',
   },
   pipelineStep: {
     display: 'flex',
@@ -140,7 +143,7 @@ const styles = {
     fontWeight: 600,
   },
   pipelineArrow: {
-    color: '#484f58',
+    color: '#94a3b8',
     fontSize: 14,
   },
   agentStatus: {
@@ -154,9 +157,9 @@ const styles = {
 };
 
 const ROLE_COLORS = {
-  [AGENT_ROLE.ARCHITECT]: '#d2a8ff',
-  [AGENT_ROLE.DEV]: '#58a6ff',
-  [AGENT_ROLE.REVIEWER]: '#f0883e',
+  [AGENT_ROLE.ARCHITECT]: '#7c3aed',
+  [AGENT_ROLE.DEV]: '#2563eb',
+  [AGENT_ROLE.REVIEWER]: '#ea580c',
 };
 
 export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }) {
@@ -208,8 +211,8 @@ export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }
       <span style={{ color, fontSize: 14 }}>
         {idle > 0 ? '\u2713' : '\u23F3'}
       </span>
-      <span style={{ color: '#e6edf3' }}>{label}:</span>
-      <span style={{ color: idle > 0 ? '#3fb950' : '#f8e3a1' }}>
+      <span style={{ color: '#0f172a' }}>{label}:</span>
+      <span style={{ color: idle > 0 ? '#16a34a' : '#d97706' }}>
         {idle}/{total} idle
       </span>
     </div>
@@ -272,17 +275,17 @@ export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }
 
               {/* Review info */}
               <div style={{
-                fontSize: 11, color: '#8b949e', padding: '8px 12px',
-                background: '#0d111744', borderRadius: 6, border: '1px solid #30363d',
+                fontSize: 11, color: '#64748b', padding: '8px 12px',
+                background: '#f8fafc', borderRadius: 6, border: '1px solid #e2e8f0',
               }}>
                 Review: uses Copilot&apos;s built-in /review command
               </div>
 
               {(architects.length === 0 || devs.length === 0 || reviewers.length === 0) && (
                 <div style={{
-                  padding: '10px 14px', background: '#da363322',
-                  border: '1px solid #da363366', borderRadius: 6,
-                  fontSize: 12, color: '#f85149',
+                  padding: '10px 14px', background: 'rgba(220,38,38,0.06)',
+                  border: '1px solid rgba(220,38,38,0.25)', borderRadius: 6,
+                  fontSize: 12, color: '#dc2626',
                 }}>
                   Missing agents! You need at least 1 of each role:
                   {architects.length === 0 && ' Architect'}
@@ -300,8 +303,8 @@ export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Describe the feature or task for the workflow pipeline..."
-                  onFocus={(e) => (e.target.style.borderColor = '#8957e5')}
-                  onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                  onFocus={(e) => (e.target.style.borderColor = '#7c3aed')}
+                  onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
                 />
               </div>
 
@@ -315,8 +318,8 @@ export default function StartWorkflowModal({ isOpen, onClose, onSubmit, agents }
                     value={workDir}
                     onChange={(e) => setWorkDir(e.target.value)}
                     placeholder="."
-                    onFocus={(e) => (e.target.style.borderColor = '#8957e5')}
-                    onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                    onFocus={(e) => (e.target.style.borderColor = '#7c3aed')}
+                    onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
                   />
                   <button
                     type="button"

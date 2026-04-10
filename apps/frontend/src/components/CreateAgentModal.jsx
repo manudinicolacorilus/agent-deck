@@ -5,53 +5,62 @@ import { AGENT_ROLE } from '@agent-deck/shared';
 let lastUsedEngine = 'copilot';
 
 const ROLE_OPTIONS = [
-  { id: null, label: 'None', desc: 'General purpose agent' },
-  { id: AGENT_ROLE.ARCHITECT, label: 'Architect', desc: 'Plans work, always uses plan mode' },
-  { id: AGENT_ROLE.DEV, label: 'Developer', desc: 'Implements plans from architects' },
-  { id: AGENT_ROLE.REVIEWER, label: 'Reviewer', desc: 'Reviews code with copilot /review' },
+  { id: null,                       label: 'None',         desc: 'General purpose agent' },
+  { id: AGENT_ROLE.ARCHITECT,       label: 'Architect',    desc: 'Plans work, always uses plan mode' },
+  { id: AGENT_ROLE.SUPER_MASTER,    label: 'Super-Master', desc: 'Oversees all agents and escalates' },
+  { id: AGENT_ROLE.MASTER,          label: 'Master',       desc: 'Coordinates sub-teams' },
+  { id: AGENT_ROLE.EXPLORER,        label: 'Explorer',     desc: 'Research, prototyping and discovery' },
+  { id: AGENT_ROLE.DEV,             label: 'Developer',    desc: 'Implements plans from architects' },
+  { id: AGENT_ROLE.INTEGRATOR,      label: 'Integrator',   desc: 'Merges work and resolves conflicts' },
+  { id: AGENT_ROLE.TESTER,          label: 'Tester',       desc: 'Writes and runs automated tests' },
+  { id: AGENT_ROLE.REVIEWER,        label: 'Reviewer',     desc: 'Reviews code with copilot /review' },
+  { id: AGENT_ROLE.RELEASER,        label: 'Releaser',     desc: 'Handles deploys and release notes' },
 ];
 
 const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.6)',
+    background: 'rgba(15, 23, 42, 0.45)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    backdropFilter: 'blur(4px)',
+    backdropFilter: 'blur(6px)',
   },
   modal: {
-    background: '#161b22',
-    border: '1px solid #30363d',
-    borderRadius: 12,
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: 14,
     width: '100%',
     maxWidth: 520,
     padding: 0,
-    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.4)',
+    boxShadow: '0 24px 64px rgba(0, 0, 0, 0.15)',
+    animation: 'scaleIn 0.18s ease both',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid #30363d',
+    borderBottom: '1px solid #e2e8f0',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
+    letterSpacing: '-0.2px',
   },
   closeBtn: {
     background: 'none',
-    border: 'none',
-    color: '#8b949e',
-    fontSize: 20,
+    border: '1px solid transparent',
+    color: '#94a3b8',
+    fontSize: 18,
     cursor: 'pointer',
     padding: '4px 8px',
     borderRadius: 6,
     lineHeight: 1,
+    transition: 'color 0.15s ease, background 0.15s ease, border-color 0.15s ease',
   },
   body: {
     padding: '20px',
@@ -65,57 +74,66 @@ const styles = {
     gap: 6,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
   },
   input: {
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
-    color: '#e6edf3',
+    color: '#0f172a',
     fontSize: 14,
     fontFamily: 'inherit',
     outline: 'none',
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   },
   hint: {
     fontSize: 12,
-    color: '#8b949e',
+    color: '#64748b',
+    lineHeight: 1.5,
   },
   footer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 10,
-    padding: '16px 20px',
-    borderTop: '1px solid #30363d',
+    gap: 8,
+    padding: '14px 20px',
+    borderTop: '1px solid #e2e8f0',
+    background: '#f8fafc',
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
   cancelBtn: {
     padding: '6px 16px',
-    background: '#21262d',
-    color: '#e6edf3',
-    border: '1px solid #30363d',
+    background: 'transparent',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
     fontFamily: 'inherit',
+    transition: 'color 0.15s ease, border-color 0.15s ease, background 0.15s ease',
   },
   submitBtn: {
-    padding: '6px 16px',
-    background: '#238636',
+    padding: '6px 18px',
+    background: '#16a34a',
     color: '#fff',
-    border: '1px solid rgba(240, 246, 252, 0.1)',
+    border: '1px solid transparent',
     borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
     fontFamily: 'inherit',
+    transition: 'filter 0.15s ease, box-shadow 0.15s ease',
   },
   engineGroup: {
     display: 'flex',
-    gap: 10,
+    gap: 8,
   },
   engineOption: {
     display: 'flex',
@@ -124,30 +142,30 @@ const styles = {
     padding: '8px 14px',
     borderRadius: 8,
     cursor: 'pointer',
-    border: '1px solid #30363d',
-    background: '#0d1117',
+    border: '1px solid #cbd5e1',
+    background: '#f8fafc',
     flex: 1,
     transition: 'all 0.15s ease',
   },
   engineOptionSelected: {
-    border: '1px solid #388bfd',
-    background: 'rgba(56, 139, 253, 0.1)',
+    border: '1px solid #2563eb',
+    background: 'rgba(37, 99, 235, 0.06)',
   },
   engineRadio: {
-    accentColor: '#388bfd',
+    accentColor: '#2563eb',
   },
   engineLabel: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   toggleRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '8px 12px',
-    background: '#0d1117',
-    border: '1px solid #30363d',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
     borderRadius: 6,
   },
   toggleLeft: {
@@ -158,11 +176,11 @@ const styles = {
   toggleLabel: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#e6edf3',
+    color: '#0f172a',
   },
   toggleHint: {
     fontSize: 11,
-    color: '#8b949e',
+    color: '#64748b',
   },
   toggleSwitch: {
     width: 40,
@@ -251,8 +269,8 @@ export default function CreateAgentModal({ isOpen, onClose, onSubmit }) {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Backend Bot"
                 required
-                onFocus={(e) => (e.target.style.borderColor = '#388bfd')}
-                onBlur={(e) => (e.target.style.borderColor = '#30363d')}
+                onFocus={(e) => { e.target.style.borderColor = '#388bfd'; e.target.style.boxShadow = '0 0 0 3px rgba(56,139,253,0.15)'; }}
+                onBlur={(e) => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none'; }}
               />
             </div>
 
@@ -307,13 +325,13 @@ export default function CreateAgentModal({ isOpen, onClose, onSubmit }) {
                     />
                     <div>
                       <span style={styles.engineLabel}>{opt.label}</span>
-                      <div style={{ fontSize: 10, color: '#8b949e', marginTop: 1 }}>{opt.desc}</div>
+                      <div style={{ fontSize: 10, color: '#64748b', marginTop: 1 }}>{opt.desc}</div>
                     </div>
                   </label>
                 ))}
               </div>
               {role === AGENT_ROLE.REVIEWER && (
-                <div style={{ fontSize: 11, color: '#f0883e', marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: '#ea580c', marginTop: 4 }}>
                   Reviewer agents always use Copilot&apos;s built-in /review command
                 </div>
               )}
@@ -332,7 +350,7 @@ export default function CreateAgentModal({ isOpen, onClose, onSubmit }) {
                   aria-label="Toggle yolo mode"
                   style={{
                     ...styles.toggleSwitch,
-                    background: yolo ? '#238636' : '#30363d',
+                    background: yolo ? '#16a34a' : '#cbd5e1',
                   }}
                   onClick={() => setYolo(!yolo)}
                 >
